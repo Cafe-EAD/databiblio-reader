@@ -1,0 +1,26 @@
+name: epub_view_example
+description: Example
+version: 1.0.0+1
+publish_to: 'none'
+
+environment:
+  sdk: ">=2.17.1 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  epub_view:
+    path: ../
+  internet_file: ^1.2.0
+  flutter_tts: ^4.0.2
+  vocsy_epub_viewer: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.2
+
+flutter:
+  assets:
+    - assets/
+  uses-material-design: true
