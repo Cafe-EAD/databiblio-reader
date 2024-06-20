@@ -1,9 +1,10 @@
 {
-    "cSpell.words": [
-      "Epub",
-      "epubcfi",
-      "epubx",
-      "prepend",
-      "rxdart"
-    ]
+  "cSpell.words": [
+    "Epub",
+    "epubcfi",
+    "epubx",
+    "prepend",
+    "rxdart"
+  ],
+  "dart.flutterSdkPath": ".fvm/versions/3.19.4"
 }

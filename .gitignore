@@ -83,3 +83,6 @@ examples/all_plugins/pubspec.yaml
 
 # Downloaded by the plugin tools.
 google-java-format-1.3-all-deps.jar
+
+# FVM Version Cache
+.fvm/
