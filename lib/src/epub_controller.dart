@@ -24,16 +24,22 @@ class EpubController {
 
   final tableOfContentsListenable = ValueNotifier<List<EpubViewChapter>>([]);
 
-  void jumpTo({required int index, double alignment = 0}) {
+  void jumpTo({required int index, double alignment = 0}) async {
     //WidgetsBinding.instance.addPostFrameCallback((_) {
-    Future.delayed(const Duration(seconds: 5), () {
-      var controllerAttached = _epubViewState?._itemScrollController?.isAttached;
-      print("controllerAttached (internalCheck) = $controllerAttached");
-      _epubViewState?._itemScrollController?.jumpTo(
-        index: index,
-        alignment: alignment,
-      );
-    });
+    while (true) {
+      if (_epubViewState?._itemScrollController?.isAttached ?? false) {
+        //Future.delayed(const Duration(seconds: 5), () {
+        var controllerAttached = _epubViewState?._itemScrollController?.isAttached;
+        print("controllerAttached (internalCheck) = $controllerAttached");
+        _epubViewState?._itemScrollController?.jumpTo(
+          index: index,
+          alignment: alignment,
+        );
+        break;
+      }
+      await Future.delayed(Duration(milliseconds: 500));
+      print("meio segundo passou");
+    }
   }
 
   bool getIsItemScrollControllerAttached() {

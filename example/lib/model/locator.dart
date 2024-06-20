@@ -8,7 +8,7 @@ class LocatorModel {
 
   factory LocatorModel.fromJson(Map<String, dynamic> json) {
     return LocatorModel(
-      bookId: json[LocatorModelKeys.bookId],
+      bookId: json[CommonModelKeys.bookId],
       lastIndex: json[LocatorModelKeys.lastIndex],
     );
   }
@@ -35,8 +35,8 @@ class PostLocatorResponse {
 
   factory PostLocatorResponse.fromJson(Map<String, dynamic> json) {
     return PostLocatorResponse(
-        success: json[LocatorModelKeys.success],
-        message: json[LocatorModelKeys.message]
+        success: json[CommonModelKeys.success],
+        message: json[CommonModelKeys.message]
     );
   }
 }

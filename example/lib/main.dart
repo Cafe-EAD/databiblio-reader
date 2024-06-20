@@ -90,12 +90,16 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late EpubController _epubReaderController;
   late FlutterTts _flutterTts;
+  late CustomBuilderOptions _builderOptions;
   late int userId;
   late int bookId;
   TtsState ttsState = TtsState.stopped;
   double volume = 0.5;
   double pitch = 1.0;
   double rate = 0.5;
+  bool isDefaultFont = true;
+  String defaultFont = "";
+  String otherFont = "OpenDyslexic";
 
   @override
   void initState() {
@@ -127,6 +131,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _epubReaderController = EpubController(
         document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
     );
+
+    _builderOptions = CustomBuilderOptions();
 
     getLocationData().then((value) => {
       setState(() {
@@ -222,9 +228,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void postLocationData(int? index) async {
     try {
-      Map<String, dynamic> locatorMap = Map();
-      locatorMap[LocatorModelKeys.bookId] = bookId;
-      locatorMap[LocatorModelKeys.userId] = userId;
+      Map<String, dynamic> locatorMap = {};
+      locatorMap[CommonModelKeys.bookId] = bookId;
+      locatorMap[CommonModelKeys.userId] = userId;
       locatorMap[LocatorModelKeys.lastIndex] = index;
       var result = await postLocatorData(locatorMap);
       print('POST Locator return ==== $result');
@@ -257,9 +263,14 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
             ),
             IconButton(
+              icon: const Icon(Icons.remove),
+              color: Colors.white,
+              onPressed: () => _changeFontSize(20),
+            ),
+            IconButton(
               icon: const Icon(Icons.add),
               color: Colors.white,
-              onPressed: () => _getLocatorAndJumpTo(),
+              onPressed: () => _changeFontFamily(),
             ),
           ],
         ),
@@ -270,8 +281,8 @@ class _MyHomePageState extends State<MyHomePage> {
           onChapterChanged: (value) {
             postLocationData(value?.position?.index);
           },
-          builders: EpubViewBuilders<DefaultBuilderOptions>(
-            options: const DefaultBuilderOptions(),
+          builders: EpubViewBuilders(
+            options: _builderOptions,
             chapterDividerBuilder: (_) => const Divider(),
           ),
           controller: _epubReaderController,
@@ -285,13 +296,28 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   */
 
-  void _getLocatorAndJumpTo() {
-    getLocationData().then((value) =>
-    {
-      setState(() {
-        _epubReaderController.jumpTo(index: value ?? 0);
-        //_epubReaderController.scrollTo(index: value ?? 0);
-      })
+  void _changeFontSize(double newFontSize) {
+    print("FONTSIZE=$newFontSize");
+    setState(() {
+      _builderOptions.textStyle = TextStyle(
+          height: _builderOptions.textStyle.height,
+          fontSize: newFontSize,
+          fontFamily: _builderOptions.textStyle.fontFamily
+      );
+    });
+  }
+
+  void _changeFontFamily() {
+    var currFont = _builderOptions.textStyle.fontFamily;
+    var newFontFamily = isDefaultFont ? otherFont : defaultFont;
+    isDefaultFont = !isDefaultFont;
+    setState(() {
+      _builderOptions.textStyle = TextStyle(
+          height: _builderOptions.textStyle.height,
+          fontSize: _builderOptions.textStyle.fontSize,
+          fontFamily: newFontFamily,
+          package: "epub_view"
+      );
     });
   }
 

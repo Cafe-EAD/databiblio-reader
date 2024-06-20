@@ -64,6 +64,28 @@ enum EpubViewLoadingState {
   success,
 }
 
+class CustomBuilderOptions {
+  final Duration loaderSwitchDuration;
+  final AnimatedSwitcherTransitionBuilder transitionBuilder;
+  final EdgeInsetsGeometry chapterPadding;
+  final EdgeInsetsGeometry paragraphPadding;
+  TextStyle textStyle;
+
+  CustomBuilderOptions({
+    this.loaderSwitchDuration = const Duration(seconds: 1),
+    this.transitionBuilder = CustomBuilderOptions._transitionBuilder,
+    this.chapterPadding = const EdgeInsets.all(8),
+    this.paragraphPadding = const EdgeInsets.symmetric(horizontal: 16),
+    this.textStyle = const TextStyle(
+      height: 1.25,
+      fontSize: 16,
+    ),
+  });
+
+  static Widget _transitionBuilder(Widget child, Animation<double> animation) =>
+      FadeTransition(opacity: animation, child: child);
+}
+
 class DefaultBuilderOptions {
   final Duration loaderSwitchDuration;
   final AnimatedSwitcherTransitionBuilder transitionBuilder;
@@ -79,6 +101,7 @@ class DefaultBuilderOptions {
     this.textStyle = const TextStyle(
       height: 1.25,
       fontSize: 16,
+      fontFamily: "OpenDyslexic"
     ),
   });
 

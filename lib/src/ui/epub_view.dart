@@ -29,7 +29,7 @@ class EpubView extends StatefulWidget {
     this.onChapterChanged,
     this.onDocumentLoaded,
     this.onDocumentError,
-    this.builders = const EpubViewBuilders<DefaultBuilderOptions>(
+    this.builders = const EpubViewBuilders(
       options: DefaultBuilderOptions(),
     ),
     this.shrinkWrap = false,
@@ -340,8 +340,9 @@ class _EpubViewState extends State<EpubView> {
       return Container();
     }
 
-    final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
-    final options = defaultBuilder.options;
+    //final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
+    //final options = defaultBuilder.options;
+    final options = builders.options;
 
     return Column(
       children: <Widget>[
@@ -466,8 +467,9 @@ class _EpubViewState extends State<EpubView> {
       }
     }();
 
-    final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
-    final options = defaultBuilder.options;
+    //final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
+    //final options = defaultBuilder.options;
+    final options = builders.options;
 
     return AnimatedSwitcher(
       duration: options.loaderSwitchDuration,
