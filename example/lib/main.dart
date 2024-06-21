@@ -1,14 +1,12 @@
-import 'dart:developer';
-import 'dart:typed_data';
+// ignore_for_file: avoid_print
 
 import 'package:epub_view/epub_view.dart';
+import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
-//import 'package:vocsy_epub_viewer/epub_viewer.dart';
-import 'package:flutter/scheduler.dart' show SchedulerBinding;
 
 import 'model/locator.dart';
 import 'network/rest.dart';
@@ -43,8 +41,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Brightness get platformBrightness =>
-      MediaQueryData.fromView(WidgetsBinding.instance.window)
-          .platformBrightness;
+      MediaQueryData.fromView(WidgetsBinding.instance.window).platformBrightness;
 
   void _setSystemUIOverlayStyle() {
     if (platformBrightness == Brightness.light) {
@@ -87,8 +84,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
@@ -103,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage>
   String otherFont = "OpenDyslexic";
   bool _isBottomSheetOpen = false;
   late TabController _tabController;
+  List<BookmarkModel> bookmarks = [];
 
   @override
   void initState() {
@@ -114,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-      document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
+      document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
       // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
 
@@ -122,11 +119,12 @@ class _MyHomePageState extends State<MyHomePage>
 
     getLocationData().then((value) => {
           setState(() {
-            var controllerAttached =
-                _epubReaderController.getIsItemScrollControllerAttached();
+            _epubReaderController.getIsItemScrollControllerAttached();
             _epubReaderController.jumpTo(index: value ?? 0);
           })
         });
+
+    getBookmarks(userId, bookId).then((value) => bookmarks = value);
 
     /*
     _epubReaderController = EpubController(
@@ -192,10 +190,8 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Future<void> _speak(String text) async {
-    if (text != null) {
-      if (text!.isNotEmpty) {
-        await _flutterTts.speak(text!);
-      }
+    if (text.isNotEmpty) {
+      await _flutterTts.speak(text);
     }
   }
 
@@ -209,6 +205,7 @@ class _MyHomePageState extends State<MyHomePage>
     } catch (e, t) {
       print('GET Locator Error ==== $e  $t');
     }
+    return null;
   }
 
   void postLocationData(int? index) async {
@@ -269,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage>
         ),
         body: EpubView(
           onChapterChanged: (value) {
-            postLocationData(value?.position?.index);
+            postLocationData(value?.position.index);
           },
           builders: EpubViewBuilders(
             options: _builderOptions,
