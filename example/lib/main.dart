@@ -249,22 +249,18 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.save_alt),
-              color: Colors.black,
               onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              color: Colors.black,
               onPressed: () => _changeFontSize(20),
             ),
             IconButton(
               icon: const Icon(Icons.add),
-              color: Colors.black,
               onPressed: () => _changeFontFamily(),
             ),
             IconButton(
               icon: const Icon(Icons.format_size),
-              color: Colors.black,
               onPressed: () => showCustomModalBottomSheet(context, widget.onToggleTheme, _changeFontSize, _builderOptions, _changeFontFamily),
             ),
           ],

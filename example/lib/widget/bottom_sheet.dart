@@ -20,8 +20,15 @@ class BottomSheetContent extends StatefulWidget {
 }
 
 class _BottomSheetContentState extends State<BottomSheetContent> {
-  bool disl = false;
+   
+    bool disl = false;
 
+
+  void _updateFontSize(double newFontSize) {
+    setState(() {
+      widget.changeFontSize(newFontSize);
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,7 +42,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
               style:  widget.builderOptions.textStyle,
             ),
             const Gap(10),
-            FontSizeAdjuster(changeFontSize: widget.changeFontSize, initialFontSize: widget.builderOptions.textStyle.fontSize!),
+            FontSizeAdjuster(changeFontSize: _updateFontSize, initialFontSize: widget.builderOptions.textStyle.fontSize!),
             const Gap(10),
              Text(
               'Fonte disléxica',
