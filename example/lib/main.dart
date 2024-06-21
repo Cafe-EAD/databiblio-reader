@@ -109,27 +109,9 @@ class _MyHomePageState extends State<MyHomePage> {
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
-    /*
-    VocsyEpub.setConfig(
-      themeColor: Theme.of(context).primaryColor,
-      identifier: "iosBook",
-      scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
-      allowSharing: true,
-      enableTts: true,
-      nightMode: true,
-    );
-
-    // get current locator
-    VocsyEpub.locatorStream.listen((locator) {
-      print('LOCATOR: $locator');
-    });
-
-    VocsyEpub.openAsset('${contextId}/${revision}/${bookName}');
-
-     */
-
     _epubReaderController = EpubController(
         document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
+        //document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
 
     _builderOptions = CustomBuilderOptions();
@@ -137,9 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
     getLocationData().then((value) => {
       setState(() {
         var controllerAttached = _epubReaderController.getIsItemScrollControllerAttached();
-        print("controllerAttached = $controllerAttached");
         _epubReaderController.jumpTo(index: value ?? 0);
-        //_epubReaderController.scrollTo(index: value ?? 0);
       })
     });
 
