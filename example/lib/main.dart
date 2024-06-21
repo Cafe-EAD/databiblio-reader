@@ -87,7 +87,8 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
@@ -100,9 +101,12 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isDefaultFont = true;
   String defaultFont = "";
   String otherFont = "OpenDyslexic";
+  bool _isBottomSheetOpen = false;
+  late TabController _tabController;
 
   @override
   void initState() {
+    _tabController = TabController(length: 2, vsync: this);
     var bookName = Uri.base.queryParameters['bookname'] ?? "";
     var contextId = Uri.base.queryParameters['contextid'] ?? "";
     var revision = Uri.base.queryParameters['revision'] ?? "";
@@ -110,18 +114,19 @@ class _MyHomePageState extends State<MyHomePage> {
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-        document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
-        //document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+      document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
+      // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
 
     _builderOptions = CustomBuilderOptions();
 
     getLocationData().then((value) => {
-      setState(() {
-        var controllerAttached = _epubReaderController.getIsItemScrollControllerAttached();
-        _epubReaderController.jumpTo(index: value ?? 0);
-      })
-    });
+          setState(() {
+            var controllerAttached =
+                _epubReaderController.getIsItemScrollControllerAttached();
+            _epubReaderController.jumpTo(index: value ?? 0);
+          })
+        });
 
     /*
     _epubReaderController = EpubController(
@@ -238,6 +243,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           actions: <Widget>[
             IconButton(
+              icon: const Icon(Icons.bookmark),
+              color: Colors.white,
+              onPressed: () => _bookmark(),
+            ),
+            IconButton(
               icon: const Icon(Icons.save_alt),
               color: Colors.white,
               onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
@@ -267,6 +277,87 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           controller: _epubReaderController,
         ),
+        bottomSheet: _isBottomSheetOpen
+            ? Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 10.0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _isBottomSheetOpen = false;
+                              });
+                            },
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.black,
+                      unselectedLabelColor: Colors.grey,
+                      tabs: const [
+                        Tab(text: 'Bookmarks'),
+                        Tab(text: 'Highlights'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          SingleChildScrollView(
+                            child: ListView.builder(
+                              itemCount: 10,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text('Bookmark ${index + 1}'),
+                                  onTap: () {},
+                                );
+                              },
+                            ),
+                          ),
+                          SingleChildScrollView(
+                            child: ListView.builder(
+                              itemCount: 10,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text('Highlight ${index + 1}'),
+                                  onTap: () {},
+                                );
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : null,
       );
 
   /*
@@ -275,6 +366,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container();
   }
   */
+  void _bookmark() {
+    setState(() {
+      _isBottomSheetOpen = true;
+    });
+  }
 
   void _changeFontSize(double newFontSize) {
     print("FONTSIZE=$newFontSize");
@@ -282,8 +378,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _builderOptions.textStyle = TextStyle(
           height: _builderOptions.textStyle.height,
           fontSize: newFontSize,
-          fontFamily: _builderOptions.textStyle.fontFamily
-      );
+          fontFamily: _builderOptions.textStyle.fontFamily);
     });
   }
 
@@ -296,8 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
           height: _builderOptions.textStyle.height,
           fontSize: _builderOptions.textStyle.fontSize,
           fontFamily: newFontFamily,
-          package: "epub_view"
-      );
+          package: "epub_view");
     });
   }
 
@@ -318,5 +412,4 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
   }
-
 }
