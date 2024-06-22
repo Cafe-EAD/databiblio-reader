@@ -1,13 +1,16 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:html/parser.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
+import 'package:nb_utils/nb_utils.dart';
 
 //import 'package:granth_flutter/main.dart';
 import '../configs.dart';
 import '../utils/constants.dart';
-import 'package:http/http.dart';
-import 'package:http/http.dart' as http;
-import 'package:nb_utils/nb_utils.dart';
-import 'package:html/parser.dart';
 
 //import '../utils/common.dart';
 
@@ -36,10 +39,12 @@ Uri buildBaseUrl(String endPoint) {
   return url;
 }
 
-Future<Response> buildHttpResponse(String endPoint, {HttpMethod method = HttpMethod.GET, Map? request, bool isStripePayment = false}) async {
+Future<Response> buildHttpResponse(String endPoint,
+    {HttpMethod method = HttpMethod.GET, Map? request, bool isStripePayment = false}) async {
   if (await isNetworkAvailable()) {
     var headers = buildHeaderTokens();
-    Uri url = buildBaseUrl(endPoint);
+    const wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
+    Uri url = buildBaseUrl('$endPoint?wstoken=$wsToken&moodlewsrestformat=json');
     log(url);
 
     Response response;
@@ -95,12 +100,13 @@ String parseHtmlString(String? htmlString) {
 }
 
 Future<MultipartRequest> getMultiPartRequest(String endPoint, {String? baseUrl}) async {
-  String url = '${baseUrl ?? buildBaseUrl(endPoint).toString()}';
+  String url = baseUrl ?? buildBaseUrl(endPoint).toString();
   log(url);
   return MultipartRequest('POST', Uri.parse(url));
 }
 
-Future<void> sendMultiPartRequest(MultipartRequest multiPartRequest, {Function(dynamic)? onSuccess, Function(dynamic)? onError}) async {
+Future<void> sendMultiPartRequest(MultipartRequest multiPartRequest,
+    {Function(dynamic)? onSuccess, Function(dynamic)? onError}) async {
   http.Response response = await http.Response.fromStream(await multiPartRequest.send());
   print("Result: ${response.statusCode}");
 
