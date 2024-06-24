@@ -39,14 +39,20 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
           children: <Widget>[
              Text(
               'Tamanho da fonte',
-              style:  widget.builderOptions.textStyle,
+              style:  TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Gap(10),
             FontSizeAdjuster(changeFontSize: _updateFontSize, initialFontSize: widget.builderOptions.textStyle.fontSize!),
             const Gap(10),
              Text(
               'Fonte disléxica',
-              style:  widget.builderOptions.textStyle,
+              style:  TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Gap(10),
             Switch(
