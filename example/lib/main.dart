@@ -41,7 +41,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Brightness get platformBrightness =>
-      MediaQueryData.fromView(WidgetsBinding.instance.window).platformBrightness;
+      MediaQueryData.fromView(WidgetsBinding.instance.window)
+          .platformBrightness;
 
   void _setSystemUIOverlayStyle() {
     if (platformBrightness == Brightness.light) {
@@ -84,7 +85,8 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
@@ -97,9 +99,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   bool isDefaultFont = true;
   String defaultFont = "";
   String otherFont = "OpenDyslexic";
-  bool _isBottomSheetOpen = false;
   late TabController _tabController;
   List<BookmarkModel> bookmarks = [];
+
+  bool _showSearchField = false;
+  final TextEditingController _searchController = TextEditingController();
+  int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
 
   @override
   void initState() {
@@ -240,9 +245,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
           actions: <Widget>[
             IconButton(
+              icon: const Icon(Icons.search),
+              color: Colors.white,
+              onPressed: () {
+                _showSearchDialog(context);
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.bookmark),
               color: Colors.white,
-              onPressed: () => _bookmark(),
+              onPressed: () {
+                setState(() {
+                  _showSearchField = !_showSearchField;
+                  _bottomSheetState = 1;
+                });
+              },
             ),
             IconButton(
               icon: const Icon(Icons.save_alt),
@@ -274,88 +291,145 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
           controller: _epubReaderController,
         ),
-        bottomSheet: _isBottomSheetOpen
-            ? Container(
-                height: MediaQuery.of(context).size.height * 0.8,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+        bottomSheet: _showSearchField
+            ? _getShowContainerReferenteFuncionalidade()
+            : const SizedBox.shrink(),
+      );
+
+  Widget _getShowContainerReferenteFuncionalidade() {
+    switch (_bottomSheetState) {
+      case 1:
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 10.0,
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 10.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(),
-                          IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _isBottomSheetOpen = false;
-                              });
-                            },
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TabBar(
-                      controller: _tabController,
-                      labelColor: Colors.black,
-                      unselectedLabelColor: Colors.grey,
-                      tabs: const [
-                        Tab(text: 'Bookmarks'),
-                        Tab(text: 'Highlights'),
-                      ],
-                    ),
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          SingleChildScrollView(
-                            child: ListView.builder(
-                              itemCount: 10,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text('Bookmark ${index + 1}'),
-                                  onTap: () {},
-                                );
-                              },
-                            ),
-                          ),
-                          SingleChildScrollView(
-                            child: ListView.builder(
-                              itemCount: 10,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  title: Text('Highlight ${index + 1}'),
-                                  onTap: () {},
-                                );
-                              },
-                            ),
-                          )
-                        ],
+                    Container(),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _showSearchField = !_showSearchField;
+                          _bottomSheetState = 0;
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.close,
+                        color: Colors.black,
                       ),
                     ),
                   ],
                 ),
-              )
-            : null,
-      );
+              ),
+              TabBar(
+                controller: _tabController,
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(text: 'Bookmarks'),
+                  Tab(text: 'Highlights'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    SingleChildScrollView(
+                      child: ListView.builder(
+                        itemCount: 10,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text('Bookmark ${index + 1}'),
+                            onTap: () {},
+                          );
+                        },
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      child: ListView.builder(
+                        itemCount: 10,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text('Highlight ${index + 1}'),
+                            onTap: () {},
+                          );
+                        },
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      default:
+        return Container();
+    }
+  }
+
+  void _showSearchDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Pesquisar',
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.white,
+          content: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Pesquisar',
+              filled: true,
+              fillColor: Colors.black.withOpacity(0.8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onEditingComplete: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _showSearchField = false;
+              });
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _showSearchField = false;
+                });
+              },
+              child: const Text(
+                'Pesquisar',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   /*
   @override
@@ -363,11 +437,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return Container();
   }
   */
-  void _bookmark() {
-    setState(() {
-      _isBottomSheetOpen = true;
-    });
-  }
 
   void _changeFontSize(double newFontSize) {
     print("FONTSIZE=$newFontSize");
