@@ -10,6 +10,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import 'model/locator.dart';
 import 'network/rest.dart';
+import 'widget/bottom_Sheet.dart';
 
 void main() => runApp(const MyApp());
 
@@ -23,6 +24,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+    ThemeMode _themeMode = ThemeMode.system;
+
+  void _toggleTheme(bool isDark) {
+    setState(() {
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
@@ -70,16 +78,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           brightness: Brightness.light,
         ),
         darkTheme: ThemeData(
-          primarySwatch: Colors.blue,
           brightness: Brightness.dark,
         ),
+        themeMode: _themeMode,
+
         debugShowCheckedModeBanner: false,
-        home: const MyHomePage(),
+      home: MyHomePage(onToggleTheme: _toggleTheme),
       );
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+    final Function(bool) onToggleTheme;
+  MyHomePage({super.key, required this.onToggleTheme});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -116,6 +126,7 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
+
       document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
       // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
@@ -263,18 +274,19 @@ class _MyHomePageState extends State<MyHomePage>
             ),
             IconButton(
               icon: const Icon(Icons.save_alt),
-              color: Colors.white,
               onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              color: Colors.white,
               onPressed: () => _changeFontSize(20),
             ),
             IconButton(
               icon: const Icon(Icons.add),
-              color: Colors.white,
               onPressed: () => _changeFontFamily(),
+            ),
+            IconButton(
+              icon: const Icon(Icons.format_size),
+              onPressed: () => showCustomModalBottomSheet(context, widget.onToggleTheme, _changeFontSize, _builderOptions, _changeFontFamily),
             ),
           ],
         ),
