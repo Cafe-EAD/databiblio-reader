@@ -21,17 +21,3 @@ class NoteModel {
 
   NoteModel({ required this.noteText });
 }
-
-class PostBookmarkResponse {
-  bool success;
-  String message;
-
-  PostBookmarkResponse({ required this.success, required this.message });
-
-  factory PostBookmarkResponse.fromJson(Map<String, dynamic> json) {
-    return PostBookmarkResponse(
-        success: json[CommonModelKeys.success],
-        message: json[CommonModelKeys.message]
-    );
-  }
-}
