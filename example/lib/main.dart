@@ -3,6 +3,7 @@
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
+import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
@@ -24,13 +25,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-    ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.system;
 
   void _toggleTheme(bool isDark) {
     setState(() {
       _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
     });
   }
+
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
@@ -81,14 +83,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           brightness: Brightness.dark,
         ),
         themeMode: _themeMode,
-
         debugShowCheckedModeBanner: false,
-      home: MyHomePage(onToggleTheme: _toggleTheme),
+        home: MyHomePage(onToggleTheme: _toggleTheme),
       );
 }
 
 class MyHomePage extends StatefulWidget {
-    final Function(bool) onToggleTheme;
+  final Function(bool) onToggleTheme;
   MyHomePage({super.key, required this.onToggleTheme});
 
   @override
@@ -115,6 +116,38 @@ class _MyHomePageState extends State<MyHomePage>
   bool _showSearchField = false;
   final TextEditingController _searchController = TextEditingController();
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
+  bool _isBookmarkMarked = false;
+
+  late bool hasEditButton;
+  late bool hasDeleteButton;
+  //dados ficticios para bookmark
+  final List<Map<String, dynamic>> bookmarkFake = [
+    {
+      "local": "Chapter I. - Parágrafo 1",
+      "conteudo":
+          "BILLY BYRNE was a product of the streets and alleys of Chicago's great West Side. From Halsted to Robey, and from Grand Avenue to Lake Street there was scarce a bartender whom Billy knew not by his first name. And, in proportion to their number which was considerably less, he knew the patrolmen and plain clothes men equally as well, but not so pleasantly.",
+    },
+    {
+      "local": "Chapter II. - Parágrafo 1",
+      "conteudo":
+          "WHEN Billy opened his eyes again he could not recall, for the instant, very much of his recent past. At last he remembered with painful regret the drunken sailor it had been his intention to roll. He felt deeply chagrined that his rightful prey should have escaped him. He couldn't understand how it had happened.",
+    },
+    {
+      "local": "Chapter II. - Parágrafo 3",
+      "conteudo":
+          "His head ached frightfully and he was very sick. So sick that the room in which he lay seemed to be rising and falling in a horribly realistic manner. Every time it dropped it brought Billy's stomach nearly to his mouth.",
+    },
+    {
+      "local": "Chapter IV. - Parágrafo 4",
+      "conteudo":
+          "Ward was pleased that he had not been forced to prolong the galling masquerade of valet to his inferior officer. He was hopeful, too,",
+    },
+    {
+      "local": "Chapter V. - Parágrafo 14",
+      "conteudo":
+          "The girl made no comment, but Divine saw the contempt in her face.",
+    },
+  ];
 
   @override
   void initState() {
@@ -126,7 +159,6 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-
       document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
       // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
@@ -257,14 +289,14 @@ class _MyHomePageState extends State<MyHomePage>
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.search),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onBackground,
               onPressed: () {
                 _showSearchDialog(context);
               },
             ),
             IconButton(
               icon: const Icon(Icons.bookmark),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onBackground,
               onPressed: () {
                 setState(() {
                   _showSearchField = !_showSearchField;
@@ -286,7 +318,12 @@ class _MyHomePageState extends State<MyHomePage>
             ),
             IconButton(
               icon: const Icon(Icons.format_size),
-              onPressed: () => showCustomModalBottomSheet(context, widget.onToggleTheme, _changeFontSize, _builderOptions, _changeFontFamily),
+              onPressed: () => showCustomModalBottomSheet(
+                  context,
+                  widget.onToggleTheme,
+                  _changeFontSize,
+                  _builderOptions,
+                  _changeFontFamily),
             ),
           ],
         ),
@@ -303,93 +340,28 @@ class _MyHomePageState extends State<MyHomePage>
           ),
           controller: _epubReaderController,
         ),
-        bottomSheet: _showSearchField
-            ? _getShowContainerReferenteFuncionalidade()
-            : const SizedBox.shrink(),
+        bottomSheet:
+            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
 
-  Widget _getShowContainerReferenteFuncionalidade() {
+  Widget _getShowContainer() {
     switch (_bottomSheetState) {
       case 1:
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 10.0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _showSearchField = !_showSearchField;
-                          _bottomSheetState = 0;
-                        });
-                      },
-                      icon: const Icon(
-                        Icons.close,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                tabs: const [
-                  Tab(text: 'Bookmarks'),
-                  Tab(text: 'Highlights'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    SingleChildScrollView(
-                      child: ListView.builder(
-                        itemCount: 10,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text('Bookmark ${index + 1}'),
-                            onTap: () {},
-                          );
-                        },
-                      ),
-                    ),
-                    SingleChildScrollView(
-                      child: ListView.builder(
-                        itemCount: 10,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text('Highlight ${index + 1}'),
-                            onTap: () {},
-                          );
-                        },
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
+        return BookmarkBottomSheet(
+          isBookmarkMarked: _isBookmarkMarked,
+          onBookmarkToggle: () {
+            setState(() {
+              _isBookmarkMarked = !_isBookmarkMarked;
+            });
+          },
+          onClose: () {
+            setState(() {
+              _showSearchField = !_showSearchField;
+              _bottomSheetState = 0;
+            });
+          },
+          tabController: _tabController,
+          bookmarkFake: bookmarkFake,
         );
       default:
         return Container();
@@ -401,17 +373,20 @@ class _MyHomePageState extends State<MyHomePage>
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
+          title: Text(
             'Pesquisar',
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
           ),
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).colorScheme.background,
           content: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Pesquisar',
               filled: true,
-              fillColor: Colors.black.withOpacity(0.8),
+              fillColor:
+                  Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -432,9 +407,11 @@ class _MyHomePageState extends State<MyHomePage>
                   _showSearchField = false;
                 });
               },
-              child: const Text(
+              child: Text(
                 'Pesquisar',
-                style: TextStyle(color: Colors.black),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onBackground,
+                ),
               ),
             ),
           ],
