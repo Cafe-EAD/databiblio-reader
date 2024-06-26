@@ -44,7 +44,7 @@ Future<Response> buildHttpResponse(String endPoint,
   if (await isNetworkAvailable()) {
     var headers = buildHeaderTokens();
     const wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
-    Uri url = buildBaseUrl('$endPoint?wstoken=$wsToken&moodlewsrestformat=json');
+    Uri url = buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
     log(url);
 
     Response response;

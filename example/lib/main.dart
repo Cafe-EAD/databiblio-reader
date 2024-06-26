@@ -174,15 +174,6 @@ class _MyHomePageState extends State<MyHomePage>
 
     getBookmarks(userId, bookId).then((value) => bookmarks = value);
 
-    /*
-    _epubReaderController = EpubController(
-        document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
-        epubCfi: cfi
-        //EpubDocument.openData(await InternetFile.get('https://media.iqonic.design/apps-server/granth/53/GiveandTake.epub'))
-    );
-
-     */
-
     super.initState();
     _initTts();
   }
