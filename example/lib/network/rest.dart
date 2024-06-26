@@ -17,9 +17,9 @@ Future<List<BookmarkModel>> getBookmarks(int userId, int bookId) async {
   return result;
 }
 
-Future<List<BookmarkModel>> sendBookmarks(int userId, int bookId, int bookmarkedindex) async {
+Future<List<BookmarkModel>> sendBookmarks(int userId, int bookId, int bookMarkedIndex) async {
   List<dynamic> response = await (handleResponse(await buildHttpResponse(
-      '$baseUrl?wsfunction=local_wsgetbooks_post_bookmark&bookid=$bookId&userid=$userId&bookmarkedindex=$bookmarkedindex',
+      '$baseUrl?wsfunction=local_wsgetbooks_post_bookmark&bookid=$bookId&userid=$userId&bookmarkedindex=$bookMarkedIndex',
       method: HttpMethod.GET)));
 
   List<BookmarkModel> result =
