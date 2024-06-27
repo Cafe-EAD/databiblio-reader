@@ -325,6 +325,12 @@ class _MyHomePageState extends State<MyHomePage>
           onChapterChanged: (value) {
             postLocationData(value?.position.index);
           },
+          /*
+          onTextToSpeech: (value) {
+            _speak(value);
+          },
+
+           */
           builders: EpubViewBuilders(
             options: _builderOptions,
             chapterDividerBuilder: (_) => const Divider(),

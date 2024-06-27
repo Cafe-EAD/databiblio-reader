@@ -28,6 +28,7 @@ typedef ChaptersBuilder = Widget Function(
   int paragraphIndex,
   ExternalLinkPressed onExternalLinkPressed,
   OnSelectedChanged onSelectedChanged,
+  OnTextToSpeech onTextToSpeech,
 );
 
 typedef ChapterDividerBuilder = Widget Function(EpubChapter value);

@@ -21,6 +21,7 @@ const _minLeadingEdge = -0.05;
 
 typedef ExternalLinkPressed = void Function(String href);
 typedef OnSelectedChanged = void Function(String? selection);
+typedef OnTextToSpeech = void Function();
 
 class EpubView extends StatefulWidget {
   const EpubView({
@@ -164,6 +165,10 @@ class _EpubViewState extends State<EpubView> {
       alignment: alignment,
       curve: curve,
     );
+  }
+
+  void _onTextToSpeech(){
+
   }
 
   void _onSelectionChanged(String? selection) {
@@ -335,6 +340,7 @@ class _EpubViewState extends State<EpubView> {
     int paragraphIndex,
     ExternalLinkPressed onExternalLinkPressed,
     OnSelectedChanged onSelectedChanged,
+    OnTextToSpeech onTextToSpeech
   ) {
     if (paragraphs.isEmpty) {
       return Container();
@@ -430,7 +436,8 @@ class _EpubViewState extends State<EpubView> {
           _getChapterIndexBy(positionIndex: index),
           _getParagraphIndexBy(positionIndex: index),
           _onLinkPressed,
-          _onSelectionChanged
+          _onSelectionChanged,
+            _onTextToSpeech
         );
       },
     );
