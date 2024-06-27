@@ -16,4 +16,5 @@ class LocatorModelKeys {
 
 class BookmarkKeys {
   static String index = "index";
+  static String note = "note";
 }
