@@ -1,12 +1,14 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:ui';
 
 const APP_NAME = 'Data Biblio';
 const DEFAULT_LANGUAGE = 'pt';
-var defaultPrimaryColor = Color(0xff0060FB);
+var defaultPrimaryColor = const Color(0xff0060FB);
 
 const DOMAIN_URL = 'https://databiblio.cafeeadhost.com.br/public';
 const BASE_URL = '$DOMAIN_URL/api/';
-
+// https://databiblion.cafeeadhost.com.br/
 const ONE_SIGNAL_APP_ID = '';
 
 ///RAZORPAY DETAIL
