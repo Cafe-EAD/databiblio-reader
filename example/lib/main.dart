@@ -1,8 +1,10 @@
 import 'dart:developer';
 import 'dart:typed_data';
 
+import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
+import 'package:epub_view_example/widget/search_match.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
@@ -26,17 +28,23 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-    ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.system;
 
   void _toggleTheme(bool isDark) {
     setState(() {
       _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
     });
   }
+
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
+  }
+
+  void _searchEpub(String query) {
+    // Aqui você pode adicionar a lógica para buscar o termo no conteúdo do ePub
+    print('Searching for: $query');
   }
 
   @override
@@ -83,14 +91,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           brightness: Brightness.dark,
         ),
         themeMode: _themeMode,
-
         debugShowCheckedModeBanner: false,
-      home: MyHomePage(onToggleTheme: _toggleTheme),
+        home: MyHomePage(onToggleTheme: _toggleTheme),
       );
 }
 
 class MyHomePage extends StatefulWidget {
-    final Function(bool) onToggleTheme;
+  final Function(bool) onToggleTheme;
   MyHomePage({super.key, required this.onToggleTheme});
 
   @override
@@ -99,6 +106,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late EpubController _epubReaderController;
+  late SearchMatch searchMatch;
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
   late int userId;
@@ -110,6 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isDefaultFont = true;
   String defaultFont = "";
   String otherFont = "OpenDyslexic";
+  TextEditingController textController = TextEditingController();
 
   @override
   void initState() {
@@ -120,18 +129,19 @@ class _MyHomePageState extends State<MyHomePage> {
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-        // document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
-        document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+      // document: EpubDocument.openAsset('${contextId}/${revision}/${bookName}'),
+      document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
-
+    searchMatch = SearchMatch(_epubReaderController);
     _builderOptions = CustomBuilderOptions();
 
     getLocationData().then((value) => {
-      setState(() {
-        var controllerAttached = _epubReaderController.getIsItemScrollControllerAttached();
-        _epubReaderController.jumpTo(index: value ?? 0);
-      })
-    });
+          setState(() {
+            var controllerAttached =
+                _epubReaderController.getIsItemScrollControllerAttached();
+            _epubReaderController.jumpTo(index: value ?? 0);
+          })
+        });
 
     /*
     _epubReaderController = EpubController(
@@ -229,6 +239,11 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void _searchEpub(String query) {
+    // Aqui você pode adicionar a lógica para buscar o termo no conteúdo do ePub
+    print('Searching for: $query');
+  }
+
   @override
   void dispose() {
     _epubReaderController.dispose();
@@ -249,11 +264,11 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.save_alt),
-              onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
+              onPressed: () => _epubReaderController.scrollTo(index: 125),
             ),
             IconButton(
               icon: const Icon(Icons.remove),
-              onPressed: () => _changeFontSize(20),
+              onPressed: () => _showCurrentEpubCfi(context),
             ),
             IconButton(
               icon: const Icon(Icons.add),
@@ -261,8 +276,25 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             IconButton(
               icon: const Icon(Icons.format_size),
-              onPressed: () => showCustomModalBottomSheet(context, widget.onToggleTheme, _changeFontSize, _builderOptions, _changeFontFamily),
+              onPressed: () => showCustomModalBottomSheet(
+                  context,
+                  widget.onToggleTheme,
+                  _changeFontSize,
+                  _builderOptions,
+                  _changeFontFamily),
             ),
+            AnimSearchBar(
+              width: 300,
+              textController: textController,
+              onSuffixTap: () {
+                setState(() {
+                  textController.clear();
+                });
+              },
+              onSubmitted: (busca) async {
+                  await searchMatch.busca(busca, context);
+              },
+            )
           ],
         ),
         drawer: Drawer(
@@ -293,8 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _builderOptions.textStyle = TextStyle(
           height: _builderOptions.textStyle.height,
           fontSize: newFontSize,
-          fontFamily: _builderOptions.textStyle.fontFamily
-      );
+          fontFamily: _builderOptions.textStyle.fontFamily);
     });
   }
 
@@ -307,9 +338,21 @@ class _MyHomePageState extends State<MyHomePage> {
           height: _builderOptions.textStyle.height,
           fontSize: _builderOptions.textStyle.fontSize,
           fontFamily: newFontFamily,
-          package: "epub_view"
-      );
+          package: "epub_view");
     });
+  }
+
+  Future<void> busca(String item) async {
+    // Obtém o EpubBook resolvendo o Future
+    EpubBook? document = await _epubReaderController.document;
+
+    // Verifica se o documento e seu conteúdo não são nulos
+    if (document?.Content?.Html != null) {
+      // Itera sobre o conteúdo HTML
+      for (var entry in document!.Content!.Html!.entries) {
+        print(entry.value.Content);
+      }
+    }
   }
 
   void _showCurrentEpubCfi(context) {
@@ -329,5 +372,4 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
   }
-
 }
