@@ -4,6 +4,7 @@ import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+import 'package:flutter/foundation.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
@@ -51,8 +52,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Brightness get platformBrightness =>
-      MediaQueryData.fromView(WidgetsBinding.instance.window)
-          .platformBrightness;
+      MediaQueryData.fromView(WidgetsBinding.instance.window).platformBrightness;
 
   void _setSystemUIOverlayStyle() {
     if (platformBrightness == Brightness.light) {
@@ -90,14 +90,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
-  MyHomePage({super.key, required this.onToggleTheme});
+  const MyHomePage({super.key, required this.onToggleTheme});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
@@ -144,13 +143,13 @@ class _MyHomePageState extends State<MyHomePage>
     },
     {
       "local": "Chapter V. - Parágrafo 14",
-      "conteudo":
-          "The girl made no comment, but Divine saw the contempt in her face.",
+      "conteudo": "The girl made no comment, but Divine saw the contempt in her face.",
     },
   ];
 
   @override
   void initState() {
+    if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
     var bookName = Uri.base.queryParameters['bookname'] ?? "";
     var contextId = Uri.base.queryParameters['contextid'] ?? "";
@@ -159,8 +158,9 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-      document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
-      // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+      document: EpubDocument.openAsset(
+        kDebugMode ? 'assets/burroughs-mucker.epub' : '$contextId/$revision/$bookName',
+      ),
     );
 
     _builderOptions = CustomBuilderOptions();
@@ -309,12 +309,8 @@ class _MyHomePageState extends State<MyHomePage>
             ),
             IconButton(
               icon: const Icon(Icons.format_size),
-              onPressed: () => showCustomModalBottomSheet(
-                  context,
-                  widget.onToggleTheme,
-                  _changeFontSize,
-                  _builderOptions,
-                  _changeFontFamily),
+              onPressed: () => showCustomModalBottomSheet(context, widget.onToggleTheme,
+                  _changeFontSize, _builderOptions, _changeFontFamily),
             ),
           ],
         ),
@@ -337,8 +333,7 @@ class _MyHomePageState extends State<MyHomePage>
           ),
           controller: _epubReaderController,
         ),
-        bottomSheet:
-            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+        bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
 
   Widget _getShowContainer() {
@@ -382,8 +377,7 @@ class _MyHomePageState extends State<MyHomePage>
             decoration: InputDecoration(
               hintText: 'Pesquisar',
               filled: true,
-              fillColor:
-                  Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
+              fillColor: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
