@@ -1,0 +1,105 @@
+PODS:
+  - AEXML (4.6.0)
+  - connectivity_plus (0.0.1):
+    - Flutter
+    - ReachabilitySwift
+  - EpubViewerKit (0.1.3):
+    - AEXML (= 4.6.0)
+    - FontBlaster (= 5.1.1)
+    - MenuItemKit (= 4.0.1)
+    - RealmSwift (= 5.5.1)
+    - SSZipArchive (= 2.2.3)
+    - ZFDragableModalTransition (= 0.6)
+  - Flutter (1.0.0)
+  - flutter_tts (0.0.1):
+    - Flutter
+  - fluttertoast (0.0.2):
+    - Flutter
+    - Toast
+  - FontBlaster (5.1.1)
+  - MenuItemKit (4.0.1)
+  - nb_utils (0.0.1):
+    - Flutter
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - ReachabilitySwift (5.2.3)
+  - Realm (5.5.1):
+    - Realm/Headers (= 5.5.1)
+  - Realm/Headers (5.5.1)
+  - RealmSwift (5.5.1):
+    - Realm (= 5.5.1)
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - SSZipArchive (2.2.3)
+  - Toast (4.1.1)
+  - vocsy_epub_viewer (2.0.0):
+    - EpubViewerKit (~> 0.1.3)
+    - Flutter
+  - ZFDragableModalTransition (0.6)
+
+DEPENDENCIES:
+  - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_tts (from `.symlinks/plugins/flutter_tts/ios`)
+  - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
+  - nb_utils (from `.symlinks/plugins/nb_utils/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - vocsy_epub_viewer (from `.symlinks/plugins/vocsy_epub_viewer/ios`)
+
+SPEC REPOS:
+  trunk:
+    - AEXML
+    - EpubViewerKit
+    - FontBlaster
+    - MenuItemKit
+    - ReachabilitySwift
+    - Realm
+    - RealmSwift
+    - SSZipArchive
+    - Toast
+    - ZFDragableModalTransition
+
+EXTERNAL SOURCES:
+  connectivity_plus:
+    :path: ".symlinks/plugins/connectivity_plus/ios"
+  Flutter:
+    :path: Flutter
+  flutter_tts:
+    :path: ".symlinks/plugins/flutter_tts/ios"
+  fluttertoast:
+    :path: ".symlinks/plugins/fluttertoast/ios"
+  nb_utils:
+    :path: ".symlinks/plugins/nb_utils/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  vocsy_epub_viewer:
+    :path: ".symlinks/plugins/vocsy_epub_viewer/ios"
+
+SPEC CHECKSUMS:
+  AEXML: 2fbb73d8724797ed2cde888731e176fa4d44dd83
+  connectivity_plus: bf0076dd84a130856aa636df1c71ccaff908fa1d
+  EpubViewerKit: 5f6c8ff9161bba18d6742c59b3c575c19f0623a9
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_tts: 0f492aab6accf87059b72354fcb4ba934304771d
+  fluttertoast: e9a18c7be5413da53898f660530c56f35edfba9c
+  FontBlaster: 8897ebdbb4b6ace3ab78c92b665d88c954f19e4a
+  MenuItemKit: 1459920e984d823e1bcc858b7a964f94e6bfa0f6
+  nb_utils: ada4338858d8827ec92fdab2a545206b4ba4cfb1
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  ReachabilitySwift: 7f151ff156cea1481a8411701195ac6a984f4979
+  Realm: c2ffe0667f9c98c9ba65f608ba85684d39826145
+  RealmSwift: 5a35c1c35c3e1925e6fcd092c881d5cc4a826bff
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  SSZipArchive: 62d4947b08730e4cda640473b0066d209ff033c9
+  Toast: 1f5ea13423a1e6674c4abdac5be53587ae481c4e
+  vocsy_epub_viewer: 2dce338f2e0ca766f2db27525977456b10fc0612
+  ZFDragableModalTransition: 0d294eaaba6edfcb9839595de765f9ca06a4b524
+
+PODFILE CHECKSUM: c59ef267c93ea5c1d692344e3f08d9b9626c1494
+
+COCOAPODS: 1.15.2
