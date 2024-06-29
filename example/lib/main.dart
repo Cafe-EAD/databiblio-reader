@@ -1,5 +1,7 @@
+
 // ignore_for_file: avoid_print
 
+import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
@@ -12,6 +14,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
+import 'widget/search_match.dart';
 
 void main() => runApp(const MyApp());
 
@@ -99,6 +102,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
+  late SearchMatch searchMatch;
+  TextEditingController textController = TextEditingController();
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
   late int userId;
@@ -162,6 +167,7 @@ class _MyHomePageState extends State<MyHomePage>
       document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
       // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
+    searchMatch = SearchMatch(_epubReaderController);
 
     _builderOptions = CustomBuilderOptions();
 
@@ -316,6 +322,18 @@ class _MyHomePageState extends State<MyHomePage>
                   _builderOptions,
                   _changeFontFamily),
             ),
+            AnimSearchBar(
+              width: 300,
+              textController: textController,
+              onSuffixTap: () {
+                setState(() {
+                  textController.clear();
+                });
+              },
+              onSubmitted: (busca) async {
+                  await searchMatch.busca(busca, context);
+              },
+            ),
           ],
         ),
         drawer: Drawer(
@@ -465,3 +483,4 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 }
+

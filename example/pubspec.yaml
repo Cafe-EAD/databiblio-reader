@@ -15,6 +15,7 @@ dependencies:
   flutter_tts: ^4.0.2
   vocsy_epub_viewer: ^2.0.0
   gap: ^3.0.1
+  anim_search_bar: ^2.0.3
 
 dev_dependencies:
   flutter_test:
