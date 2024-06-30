@@ -1,5 +1,3 @@
-
-
 // ignore_for_file: avoid_print
 
 import 'package:anim_search_bar/anim_search_bar.dart';
@@ -12,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
 
+import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
@@ -165,8 +164,8 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-      document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
-      // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+      // document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
+      document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
     searchMatch = SearchMatch(_epubReaderController);
 
@@ -274,6 +273,8 @@ class _MyHomePageState extends State<MyHomePage>
     super.dispose();
   }
 
+
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
@@ -332,7 +333,21 @@ class _MyHomePageState extends State<MyHomePage>
                 });
               },
               onSubmitted: (busca) async {
-                  await searchMatch.busca(busca, context);
+                await searchMatch.busca(busca, context);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.assistant_rounded),
+              onPressed: () {
+                if (_epubReaderController.selectedText != null &&
+                    _epubReaderController.generateEpubCfi() != null &&
+                    _epubReaderController.currentValueListenable.value !=
+                        null) {
+                  HighlightModel(
+                      value: _epubReaderController.currentValueListenable.value,
+                      selectedText: _epubReaderController.selectedText,
+                      cfi: _epubReaderController.generateEpubCfi()).printar();
+                }
               },
             ),
           ],
@@ -343,7 +358,9 @@ class _MyHomePageState extends State<MyHomePage>
         body: EpubView(
           onChapterChanged: (value) {
             postLocationData(value?.position.index);
+            print(value?.chapterNumber);
           },
+
           /*
           onTextToSpeech: (value) {
             _speak(value);

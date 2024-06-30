@@ -18,3 +18,9 @@ class BookmarkKeys {
   static String index = "index";
   static String note = "note";
 }
+
+class HighlightKeys {
+  static const String value = 'value';
+  static const String selectedText = 'selectedText';
+  static const String cfi = 'cfi';
+}
