@@ -1,11 +1,12 @@
 
+
 // ignore_for_file: avoid_print
 
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
-import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+// import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
@@ -355,33 +356,33 @@ class _MyHomePageState extends State<MyHomePage>
           ),
           controller: _epubReaderController,
         ),
-        bottomSheet:
-            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+        // bottomSheet:
+        //     _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
 
-  Widget _getShowContainer() {
-    switch (_bottomSheetState) {
-      case 1:
-        return BookmarkBottomSheet(
-          isBookmarkMarked: _isBookmarkMarked,
-          onBookmarkToggle: () {
-            setState(() {
-              _isBookmarkMarked = !_isBookmarkMarked;
-            });
-          },
-          onClose: () {
-            setState(() {
-              _showSearchField = !_showSearchField;
-              _bottomSheetState = 0;
-            });
-          },
-          tabController: _tabController,
-          bookmarkFake: bookmarkFake,
-        );
-      default:
-        return Container();
-    }
-  }
+  // Widget _getShowContainer() {
+  //   switch (_bottomSheetState) {
+  //     case 1:
+  //       return BookmarkBottomSheet(
+  //         isBookmarkMarked: _isBookmarkMarked,
+  //         onBookmarkToggle: () {
+  //           setState(() {
+  //             _isBookmarkMarked = !_isBookmarkMarked;
+  //           });
+  //         },
+  //         onClose: () {
+  //           setState(() {
+  //             _showSearchField = !_showSearchField;
+  //             _bottomSheetState = 0;
+  //           });
+  //         },
+  //         tabController: _tabController,
+  //         bookmarkFake: bookmarkFake,
+  //       );
+  //     default:
+  //       return Container();
+  //   }
+  // }
 
   void _showSearchDialog(BuildContext context) {
     showDialog(
@@ -483,4 +484,3 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 }
-
