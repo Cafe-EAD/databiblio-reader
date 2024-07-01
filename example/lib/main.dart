@@ -429,21 +429,8 @@ class _MyHomePageState extends State<MyHomePage>
   _getInfoBookMark() async {
     List<dynamic> response =
         await (handleResponse(await getBookmarksInfo(1, 1)));
-
     List<Bookmarkedinfo> bookmarks =
         response.map((bookmark) => Bookmarkedinfo.fromJson(bookmark)).toList();
-
-    print("Bookmarks:");
-    for (Bookmarkedinfo bookmark in bookmarks) {
-      print("ID: ${bookmark.id}");
-      print("Bookmarked Index: ${bookmark.bookmarkedindex}");
-      print("Notes:");
-      for (Note note in bookmark.note ?? []) {
-        print("- ${note.notetext}");
-      }
-      print("");
-    }
-
     setState(() {
       bookmarksinfo = bookmarks;
     });

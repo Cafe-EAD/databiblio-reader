@@ -1,9 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmarkinfo.dart';
 import 'package:epub_view_example/network/network_utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
@@ -65,7 +62,6 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
           "The girl made no comment, but Divine saw the contempt in her face.",
     },
   ];
-  final TextEditingController _noteController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -104,7 +100,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                               .epubReaderController.currentValue!.chapterNumber,
                     )) {
                       try {
-                        print("Remover");
+                        // print("Remover");
                         Bookmarkedinfo bookmarkToRemove =
                             widget.bookmarksinfo.firstWhere(
                           (bookmark) =>
@@ -112,9 +108,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                               widget.epubReaderController.currentValue!
                                   .chapterNumber,
                         );
-                        // Obtém o ID do bookmark encontrado
                         int bookmarkIdToRemove = bookmarkToRemove.id!;
-                        print(bookmarkIdToRemove);
                         await (handleResponse(
                             await removeBookmarkInfo(bookmarkIdToRemove)));
                         widget.onBookmarkAdded();
@@ -123,9 +117,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                         print('Erro ao criar bookmark: ${e.toString()}');
                       }
                     } else {
-                      print("Marcar");
+                      // print("Marcar");
                       try {
-                        print("teste");
                         await (handleResponse(await postBookmarkInfo(
                           widget.bookId == 0 ? 1 : widget.bookId,
                           widget.userId == 0 ? 1 : widget.userId,

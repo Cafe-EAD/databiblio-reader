@@ -135,17 +135,29 @@ Future<dynamic> getBookmarksInfo(int bookId, int userId) async {
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        print('object');
-        print(response.body);
-        print('object --');
         return response;
       } else {
+        Notifications.error(
+          title: "Error",
+          message: 'Erro na requisição: ${response.statusCode}',
+          duration: const Duration(seconds: 10),
+        );
         throw Exception('Erro na requisição: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro ao buscar marcadores: $e');
+      Notifications.error(
+        title: "Error",
+        message: 'Erro ao remover nota do marcador: $e',
+        duration: const Duration(seconds: 10),
+      );
+      throw Exception('Erro ao remover nota do marcador: $e');
     }
   } else {
+    Notifications.error(
+      title: "Error",
+      message: 'Sem conexão com a internet.',
+      duration: const Duration(seconds: 10),
+    );
     throw Exception('Sem conexão com a internet.');
   }
 }
@@ -162,8 +174,6 @@ Future<dynamic> postBookmarkInfo(
       'bookmarkedindex': bookmarkedIndex.toString(),
       'moodlewsrestformat': 'json'
     });
-
-    print(url);
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -172,17 +182,29 @@ Future<dynamic> postBookmarkInfo(
           message: "Seu marcador foi salvo com sucesso",
           duration: const Duration(seconds: 10),
         );
-        print(url);
         return response.body;
       } else {
-        print(response);
+        Notifications.error(
+          title: "Error",
+          message: 'Erro na requisição: ${response.statusCode}',
+          duration: const Duration(seconds: 10),
+        );
         throw Exception('Erro na requisição: ${response.statusCode}');
       }
     } catch (e) {
-      print(e);
-      throw Exception('Erro ao adicionar marcador: $e');
+      Notifications.error(
+        title: "Error",
+        message: 'Erro ao remover nota do marcador: $e',
+        duration: const Duration(seconds: 10),
+      );
+      throw Exception('Erro ao remover nota do marcador: $e');
     }
   } else {
+    Notifications.error(
+      title: "Error",
+      message: 'Sem conexão com a internet.',
+      duration: const Duration(seconds: 10),
+    );
     throw Exception('Sem conexão com a internet.');
   }
 }
@@ -206,12 +228,27 @@ Future<dynamic> removeBookmarkInfo(int id) async {
         );
         return response;
       } else {
+        Notifications.error(
+          title: "Error",
+          message: 'Erro na requisição: ${response.statusCode}',
+          duration: const Duration(seconds: 10),
+        );
         throw Exception('Erro na requisição: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro ao remover marcador: $e');
+      Notifications.error(
+        title: "Error",
+        message: 'Erro ao remover nota do marcador: $e',
+        duration: const Duration(seconds: 10),
+      );
+      throw Exception('Erro ao remover nota do marcador: $e');
     }
   } else {
+    Notifications.error(
+      title: "Error",
+      message: 'Sem conexão com a internet.',
+      duration: const Duration(seconds: 10),
+    );
     throw Exception('Sem conexão com a internet.');
   }
 }
@@ -229,9 +266,6 @@ Future<dynamic> postBookmarkNotesInfo(int bookmarkId, String noteText) async {
     try {
       final response = await http.post(url);
       if (response.statusCode == 200) {
-        print('object');
-        print(response.body);
-        print('object');
         Notifications.success(
           title: "Ok",
           message: "Sua nota foi salva com sucesso",
@@ -239,12 +273,27 @@ Future<dynamic> postBookmarkNotesInfo(int bookmarkId, String noteText) async {
         );
         return response.body;
       } else {
+        Notifications.error(
+          title: "Error",
+          message: 'Erro na requisição: ${response.statusCode}',
+          duration: const Duration(seconds: 10),
+        );
         throw Exception('Erro na requisição: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro ao adicionar nota: $e');
+      Notifications.error(
+        title: "Error",
+        message: 'Erro ao remover nota do marcador: $e',
+        duration: const Duration(seconds: 10),
+      );
+      throw Exception('Erro ao remover nota do marcador: $e');
     }
   } else {
+    Notifications.error(
+      title: "Error",
+      message: 'Sem conexão com a internet.',
+      duration: const Duration(seconds: 10),
+    );
     throw Exception('Sem conexão com a internet.');
   }
 }
@@ -267,15 +316,29 @@ Future<dynamic> removeBookmarkNotesInfo(int id) async {
           message: "Removido com sucesso",
           duration: const Duration(seconds: 10),
         );
-        print(response);
         return response;
       } else {
+        Notifications.error(
+          title: "Error",
+          message: 'Erro na requisição: ${response.statusCode}',
+          duration: const Duration(seconds: 10),
+        );
         throw Exception('Erro na requisição: ${response.statusCode}');
       }
     } catch (e) {
+      Notifications.error(
+        title: "Error",
+        message: 'Erro ao remover nota do marcador: $e',
+        duration: const Duration(seconds: 10),
+      );
       throw Exception('Erro ao remover nota do marcador: $e');
     }
   } else {
+    Notifications.error(
+      title: "Error",
+      message: 'Sem conexão com a internet.',
+      duration: const Duration(seconds: 10),
+    );
     throw Exception('Sem conexão com a internet.');
   }
 }
