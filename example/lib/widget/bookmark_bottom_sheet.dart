@@ -248,13 +248,6 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                                       }
                                     },
                                   ),
-                                  Text(widget
-                                      .bookmarksinfo[
-                                          widget.bookmarksinfo.length -
-                                              index -
-                                              1]
-                                      .id
-                                      .toString()),
                                   const SizedBox(height: 8),
                                   Text(
                                     _getNote(widget
