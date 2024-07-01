@@ -11,7 +11,7 @@ class Bookmarkedinfo {
     if (json['note'] != null) {
       note = <Note>[];
       json['note'].forEach((v) {
-        note!.add(new Note.fromJson(v));
+        note!.add(Note.fromJson(v));
       });
     }
   }

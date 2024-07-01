@@ -1,6 +1,8 @@
+// ignore_for_file: library_private_types_in_public_api, avoid_print, use_build_context_synchronously
+
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmarkinfo.dart';
-import 'package:epub_view_example/network/network_utils.dart';
+import 'package:epub_view_example/network/rest.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
@@ -109,8 +111,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                                   .chapterNumber,
                         );
                         int bookmarkIdToRemove = bookmarkToRemove.id!;
-                        await (handleResponse(
-                            await removeBookmarkInfo(bookmarkIdToRemove)));
+                        await deleteBookmark(bookmarkIdToRemove);
                         widget.onBookmarkAdded();
                       } catch (e) {
                         widget.onBookmarkAdded();
@@ -119,13 +120,12 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     } else {
                       // print("Marcar");
                       try {
-                        await (handleResponse(await postBookmarkInfo(
+                        await postBookmark(
                           widget.bookId == 0 ? 1 : widget.bookId,
                           widget.userId == 0 ? 1 : widget.userId,
                           widget
                               .epubReaderController.currentValue!.chapterNumber,
-                        )));
-                        print("teste");
+                        );
                         widget.onBookmarkAdded();
                       } catch (e) {
                         widget.onBookmarkAdded();
@@ -362,7 +362,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
   }
 
   void _showNoteDialog(BuildContext context, Bookmarkedinfo bookmark) async {
-    TextEditingController _noteController = TextEditingController(
+    TextEditingController noteController = TextEditingController(
       text: bookmark.note?.isNotEmpty == true ? bookmark.note![0].notetext : '',
     );
 
@@ -377,7 +377,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
           ),
           content: SingleChildScrollView(
             child: TextField(
-              controller: _noteController,
+              controller: noteController,
               maxLines: null,
               decoration: const InputDecoration(
                 hintText: 'Digite sua nota aqui...',
@@ -393,13 +393,12 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await (handleResponse(await postBookmarkNotesInfo(
-                      bookmark.id!.toInt(), _noteController.text)));
+                  await postBookmarkNote(
+                      bookmark.id!.toInt(), noteController.text);
                   Navigator.pop(context);
                   widget.onBookmarkAdded();
                 } catch (e) {
                   Navigator.pop(context);
-                  widget.onBookmarkAdded();
                   print('Erro ao atualizar nota: ${e.toString()}');
                 }
               },
@@ -427,13 +426,11 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
             TextButton(
               onPressed: () async {
                 try {
-                  await (handleResponse(await removeBookmarkNotesInfo(
-                      bookmark.note![0].id!.toInt())));
+                  deleteBookmarkNote(bookmark.note![0].id!.toInt());
                   Navigator.pop(context);
                   widget.onBookmarkAdded();
                 } catch (e) {
                   Navigator.pop(context);
-                  widget.onBookmarkAdded();
                   print('Erro ao apagar nota: ${e.toString()}');
                 }
               },

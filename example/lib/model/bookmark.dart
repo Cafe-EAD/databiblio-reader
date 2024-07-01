@@ -17,6 +17,7 @@ class BookmarkModel {
 
 class NoteModel {
   String noteText;
+  int id;
 
-  NoteModel({required this.noteText});
+  NoteModel({required this.noteText, required this.id});
 }

@@ -1,8 +1,9 @@
 // ignore_for_file: avoid_print
+import 'dart:convert';
+
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/bookmarkinfo.dart';
-import 'package:epub_view_example/network/network_utils.dart';
 import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
@@ -182,7 +183,8 @@ class _MyHomePageState extends State<MyHomePage>
           })
         });
 
-    getBookmarks(userId, bookId).then((value) => bookmarks = value);
+    getBookmarks(userId, bookId)
+        .then((value) => bookmarks = value as List<BookmarkModel>);
 
     super.initState();
     _initTts();
@@ -464,13 +466,24 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   _getInfoBookMark() async {
-    List<dynamic> response =
-        await (handleResponse(await getBookmarksInfo(1, 1)));
-    List<Bookmarkedinfo> bookmarks =
-        response.map((bookmark) => Bookmarkedinfo.fromJson(bookmark)).toList();
-    setState(() {
-      bookmarksinfo = bookmarks;
-    });
+    try {
+      final response = await getBookmarks(
+          userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(response.body);
+        List<Bookmarkedinfo> bookmarks = responseData
+            .map((bookmark) => Bookmarkedinfo.fromJson(bookmark))
+            .toList();
+        setState(() {
+          bookmarksinfo = bookmarks;
+        });
+      } else {
+        print("Erro na requisição: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Erro ao obter bookmarks: $e");
+    }
   }
 
   void _updateBookmarks() {
