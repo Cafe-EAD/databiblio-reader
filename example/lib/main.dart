@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/bookmarkinfo.dart';
@@ -6,14 +7,18 @@ import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
+import 'package:anim_search_bar/anim_search_bar.dart';
+
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
 
+import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
+import 'widget/search_match.dart';
 
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
@@ -115,7 +120,7 @@ _getMenu(widget) {
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
-  const MyHomePage({super.key, required this.onToggleTheme});
+  MyHomePage({super.key, required this.onToggleTheme});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -124,6 +129,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
+  late SearchMatch searchMatch;
+  TextEditingController textController = TextEditingController();
+
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
   late int userId;
@@ -163,6 +171,7 @@ class _MyHomePageState extends State<MyHomePage>
             : '$contextId/$revision/$bookName',
       ),
     );
+    searchMatch = SearchMatch(_epubReaderController);
 
     _builderOptions = CustomBuilderOptions();
 
@@ -319,6 +328,34 @@ class _MyHomePageState extends State<MyHomePage>
                   _changeFontSize,
                   _builderOptions,
                   _changeFontFamily),
+            ),
+            AnimSearchBar(
+              width: 300,
+              textController: textController,
+              onSuffixTap: () {
+                setState(() {
+                  textController.clear();
+                });
+              },
+              onSubmitted: (busca) async {
+                await searchMatch.busca(busca, context);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.assistant_rounded),
+              onPressed: () {
+                if (_epubReaderController.selectedText != null &&
+                    _epubReaderController.generateEpubCfi() != null &&
+                    _epubReaderController.currentValueListenable.value !=
+                        null) {
+                  HighlightModel(
+                          value: _epubReaderController
+                              .currentValueListenable.value,
+                          selectedText: _epubReaderController.selectedText,
+                          cfi: _epubReaderController.generateEpubCfi())
+                      .printar();
+                }
+              },
             ),
           ],
         ),
