@@ -1,7 +1,8 @@
-// ignore_for_file: avoid_print
-
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
+import 'package:epub_view_example/model/bookmarkinfo.dart';
+import 'package:epub_view_example/network/network_utils.dart';
+import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
@@ -12,6 +13,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
+
+import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 void main() => runApp(const MyApp());
 
@@ -85,7 +88,28 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         themeMode: _themeMode,
         debugShowCheckedModeBanner: false,
         home: MyHomePage(onToggleTheme: _toggleTheme),
+        builder: (context, widget) {
+          widget = _getMenu(widget);
+          return widget!;
+        },
       );
+}
+
+_getMenu(widget) {
+  return Overlay(
+    initialEntries: [
+      OverlayEntry(
+        builder: (context) {
+          return ToastProvider(
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+              child: widget!,
+            ),
+          );
+        },
+      ),
+    ],
+  );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -112,6 +136,7 @@ class _MyHomePageState extends State<MyHomePage>
   String otherFont = "OpenDyslexic";
   late TabController _tabController;
   List<BookmarkModel> bookmarks = [];
+  List<Bookmarkedinfo> bookmarksinfo = [];
 
   bool _showSearchField = false;
   final TextEditingController _searchController = TextEditingController();
@@ -120,34 +145,8 @@ class _MyHomePageState extends State<MyHomePage>
 
   late bool hasEditButton;
   late bool hasDeleteButton;
-  //dados ficticios para bookmark
-  final List<Map<String, dynamic>> bookmarkFake = [
-    {
-      "local": "Chapter I. - Parágrafo 1",
-      "conteudo":
-          "BILLY BYRNE was a product of the streets and alleys of Chicago's great West Side. From Halsted to Robey, and from Grand Avenue to Lake Street there was scarce a bartender whom Billy knew not by his first name. And, in proportion to their number which was considerably less, he knew the patrolmen and plain clothes men equally as well, but not so pleasantly.",
-    },
-    {
-      "local": "Chapter II. - Parágrafo 1",
-      "conteudo":
-          "WHEN Billy opened his eyes again he could not recall, for the instant, very much of his recent past. At last he remembered with painful regret the drunken sailor it had been his intention to roll. He felt deeply chagrined that his rightful prey should have escaped him. He couldn't understand how it had happened.",
-    },
-    {
-      "local": "Chapter II. - Parágrafo 3",
-      "conteudo":
-          "His head ached frightfully and he was very sick. So sick that the room in which he lay seemed to be rising and falling in a horribly realistic manner. Every time it dropped it brought Billy's stomach nearly to his mouth.",
-    },
-    {
-      "local": "Chapter IV. - Parágrafo 4",
-      "conteudo":
-          "Ward was pleased that he had not been forced to prolong the galling masquerade of valet to his inferior officer. He was hopeful, too,",
-    },
-    {
-      "local": "Chapter V. - Parágrafo 14",
-      "conteudo":
-          "The girl made no comment, but Divine saw the contempt in her face.",
-    },
-  ];
+
+  EpubChapterViewValue? _currentChapterValue;
 
   @override
   void initState() {
@@ -159,8 +158,8 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-      document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
-      // document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+      // document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
+      document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
     );
 
     _builderOptions = CustomBuilderOptions();
@@ -272,10 +271,24 @@ class _MyHomePageState extends State<MyHomePage>
         appBar: AppBar(
           title: EpubViewActualChapter(
             controller: _epubReaderController,
-            builder: (chapterValue) => Text(
-              chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-              textAlign: TextAlign.start,
-            ),
+            builder: (chapterValue) {
+              print('Teste');
+              print('Chapter Value: ${chapterValue.toString()}');
+              print(
+                  'Chapter chapterNumber: ${chapterValue?.chapterNumber.toString()}');
+              _currentChapterValue = chapterValue;
+
+              return Text(
+                chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+                textAlign: TextAlign.start,
+              );
+            },
+
+            // builder: (chapterValue) => Text(
+            //   "teste",
+            //   // chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+            //   textAlign: TextAlign.start,
+            // ),
           ),
           actions: <Widget>[
             IconButton(
@@ -288,7 +301,8 @@ class _MyHomePageState extends State<MyHomePage>
             IconButton(
               icon: const Icon(Icons.bookmark),
               color: Theme.of(context).colorScheme.onBackground,
-              onPressed: () {
+              onPressed: () async {
+                await _getInfos();
                 setState(() {
                   _showSearchField = !_showSearchField;
                   _bottomSheetState = 1;
@@ -358,7 +372,10 @@ class _MyHomePageState extends State<MyHomePage>
             });
           },
           tabController: _tabController,
-          bookmarkFake: bookmarkFake,
+          bookmarksinfo: bookmarksinfo,
+          chapterValue: _currentChapterValue,
+          epubReaderController: _epubReaderController,
+          onBookmarkAdded: _updateBookmarks,
         );
       default:
         return Container();
@@ -415,6 +432,33 @@ class _MyHomePageState extends State<MyHomePage>
         );
       },
     );
+  }
+
+  _getInfos() async {
+    List<dynamic> response =
+        await (handleResponse(await getBookmarksInfo(1, 1)));
+
+    List<Bookmarkedinfo> bookmarks =
+        response.map((bookmark) => Bookmarkedinfo.fromJson(bookmark)).toList();
+
+    print("Bookmarks:");
+    for (Bookmarkedinfo bookmark in bookmarks) {
+      print("ID: ${bookmark.id}");
+      print("Bookmarked Index: ${bookmark.bookmarkedindex}");
+      print("Notes:");
+      for (Note note in bookmark.note ?? []) {
+        print("- ${note.notetext}");
+      }
+      print("");
+    }
+
+    setState(() {
+      bookmarksinfo = bookmarks;
+    });
+  }
+
+  void _updateBookmarks() {
+    _getInfos();
   }
 
   /*

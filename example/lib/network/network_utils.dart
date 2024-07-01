@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:epub_view_example/utils/notifications.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
@@ -35,16 +36,18 @@ Map<String, String> buildHeaderTokens() {
 Uri buildBaseUrl(String endPoint) {
   Uri url = Uri.parse(endPoint);
   if (!endPoint.startsWith('http')) url = Uri.parse('$BASE_URL$endPoint');
-
   return url;
 }
 
 Future<Response> buildHttpResponse(String endPoint,
-    {HttpMethod method = HttpMethod.GET, Map? request, bool isStripePayment = false}) async {
+    {HttpMethod method = HttpMethod.GET,
+    Map? request,
+    bool isStripePayment = false}) async {
   if (await isNetworkAvailable()) {
     var headers = buildHeaderTokens();
     const wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
-    Uri url = buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
+    Uri url =
+        buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
     log(url);
 
     Response response;
@@ -99,7 +102,8 @@ String parseHtmlString(String? htmlString) {
   return parse(parse(htmlString).body!.text).documentElement!.text;
 }
 
-Future<MultipartRequest> getMultiPartRequest(String endPoint, {String? baseUrl}) async {
+Future<MultipartRequest> getMultiPartRequest(String endPoint,
+    {String? baseUrl}) async {
   String url = baseUrl ?? buildBaseUrl(endPoint).toString();
   log(url);
   return MultipartRequest('POST', Uri.parse(url));
@@ -107,13 +111,167 @@ Future<MultipartRequest> getMultiPartRequest(String endPoint, {String? baseUrl})
 
 Future<void> sendMultiPartRequest(MultipartRequest multiPartRequest,
     {Function(dynamic)? onSuccess, Function(dynamic)? onError}) async {
-  http.Response response = await http.Response.fromStream(await multiPartRequest.send());
+  http.Response response =
+      await http.Response.fromStream(await multiPartRequest.send());
   print("Result: ${response.statusCode}");
 
   if (response.statusCode.isSuccessful()) {
     onSuccess?.call(response.body);
   } else {
     onError?.call(errorSomethingWentWrong);
+  }
+}
+
+Future<dynamic> getBookmarksInfo(int bookId, int userId) async {
+  if (await isNetworkAvailable()) {
+    String wsfunction = 'local_wsgetbooks_get_bookmarks';
+    Uri url = Uri.parse(URLBOOK).replace(queryParameters: {
+      'wstoken': WSTOKEN,
+      'wsfunction': wsfunction,
+      'bookid': bookId.toString(),
+      'userid': userId.toString(),
+      'moodlewsrestformat': 'json'
+    });
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        print('object');
+        print(response.body);
+        print('object --');
+        return response;
+      } else {
+        throw Exception('Erro na requisição: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro ao buscar marcadores: $e');
+    }
+  } else {
+    throw Exception('Sem conexão com a internet.');
+  }
+}
+
+Future<dynamic> postBookmarkInfo(
+    int bookId, int userId, int bookmarkedIndex) async {
+  if (await isNetworkAvailable()) {
+    String wsfunction = 'local_wsgetbooks_post_bookmark';
+    Uri url = Uri.parse(URLBOOK).replace(queryParameters: {
+      'wstoken': WSTOKEN,
+      'wsfunction': wsfunction,
+      'bookid': bookId.toString(),
+      'userid': userId.toString(),
+      'bookmarkedindex': bookmarkedIndex.toString(),
+      'moodlewsrestformat': 'json'
+    });
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        Notifications.success(
+          title: "Ok",
+          message: "Seu marcador foi salvo com sucesso",
+          duration: const Duration(seconds: 10),
+        );
+        return response.body;
+      } else {
+        throw Exception('Erro na requisição: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro ao adicionar marcador: $e');
+    }
+  } else {
+    throw Exception('Sem conexão com a internet.');
+  }
+}
+
+Future<dynamic> removeBookmarkInfo(int id) async {
+  if (await isNetworkAvailable()) {
+    String wsfunction = 'local_wsgetbooks_remove_bookmark';
+    Uri url = Uri.parse(URLBOOK).replace(queryParameters: {
+      'wstoken': WSTOKEN,
+      'wsfunction': wsfunction,
+      'id': id.toString(),
+      'moodlewsrestformat': 'json'
+    });
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        Notifications.success(
+          title: "Ok",
+          message: "Removido com sucesso",
+          duration: const Duration(seconds: 10),
+        );
+        return response;
+      } else {
+        throw Exception('Erro na requisição: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro ao remover marcador: $e');
+    }
+  } else {
+    throw Exception('Sem conexão com a internet.');
+  }
+}
+
+Future<dynamic> postBookmarkNotesInfo(int bookmarkId, String noteText) async {
+  if (await isNetworkAvailable()) {
+    String wsfunction = 'local_wsgetbooks_post_bookmarknotes';
+    Uri url = Uri.parse(URLBOOK).replace(queryParameters: {
+      'wstoken': WSTOKEN,
+      'wsfunction': wsfunction,
+      'bookmarkid': bookmarkId.toString(),
+      'notetext': noteText,
+      'moodlewsrestformat': 'json'
+    });
+    try {
+      final response = await http.post(url);
+      if (response.statusCode == 200) {
+        print('object');
+        print(response.body);
+        print('object');
+        Notifications.success(
+          title: "Ok",
+          message: "Sua nota foi salva com sucesso",
+          duration: const Duration(seconds: 10),
+        );
+        return response.body;
+      } else {
+        throw Exception('Erro na requisição: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro ao adicionar nota: $e');
+    }
+  } else {
+    throw Exception('Sem conexão com a internet.');
+  }
+}
+
+Future<dynamic> removeBookmarkNotesInfo(int id) async {
+  if (await isNetworkAvailable()) {
+    String wsfunction = 'local_wsgetbooks_remove_bookmarknotes';
+    Uri url = Uri.parse(URLBOOK).replace(queryParameters: {
+      'wstoken': WSTOKEN,
+      'wsfunction': wsfunction,
+      'id': id.toString(),
+      'moodlewsrestformat': 'json'
+    });
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        Notifications.success(
+          title: "Ok",
+          message: "Removido com sucesso",
+          duration: const Duration(seconds: 10),
+        );
+        print(response);
+        return response;
+      } else {
+        throw Exception('Erro na requisição: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro ao remover nota do marcador: $e');
+    }
+  } else {
+    throw Exception('Sem conexão com a internet.');
   }
 }
 
