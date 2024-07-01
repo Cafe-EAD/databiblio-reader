@@ -162,6 +162,8 @@ Future<dynamic> postBookmarkInfo(
       'bookmarkedindex': bookmarkedIndex.toString(),
       'moodlewsrestformat': 'json'
     });
+
+    print(url);
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -170,11 +172,14 @@ Future<dynamic> postBookmarkInfo(
           message: "Seu marcador foi salvo com sucesso",
           duration: const Duration(seconds: 10),
         );
+        print(url);
         return response.body;
       } else {
+        print(response);
         throw Exception('Erro na requisição: ${response.statusCode}');
       }
     } catch (e) {
+      print(e);
       throw Exception('Erro ao adicionar marcador: $e');
     }
   } else {

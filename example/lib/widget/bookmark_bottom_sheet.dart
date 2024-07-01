@@ -3,7 +3,7 @@
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmarkinfo.dart';
 import 'package:epub_view_example/network/network_utils.dart';
-import 'package:epub_view_example/network/rest.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
@@ -16,6 +16,8 @@ class BookmarkBottomSheet extends StatefulWidget {
   final EpubChapterViewValue? chapterValue;
   final EpubController epubReaderController;
   final Function() onBookmarkAdded;
+  final int bookId;
+  final int userId;
 
   const BookmarkBottomSheet({
     Key? key,
@@ -27,6 +29,8 @@ class BookmarkBottomSheet extends StatefulWidget {
     required this.chapterValue,
     required this.epubReaderController,
     required this.onBookmarkAdded,
+    required this.bookId,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -96,7 +100,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     if (widget.bookmarksinfo.any(
                       (bookmark) =>
                           bookmark.bookmarkedindex ==
-                          widget.chapterValue?.chapterNumber,
+                          widget
+                              .epubReaderController.currentValue!.chapterNumber,
                     )) {
                       try {
                         print("Remover");
@@ -104,7 +109,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                             widget.bookmarksinfo.firstWhere(
                           (bookmark) =>
                               bookmark.bookmarkedindex ==
-                              widget.chapterValue?.chapterNumber,
+                              widget.epubReaderController.currentValue!
+                                  .chapterNumber,
                         );
                         // Obtém o ID do bookmark encontrado
                         int bookmarkIdToRemove = bookmarkToRemove.id!;
@@ -119,8 +125,14 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     } else {
                       print("Marcar");
                       try {
+                        print("teste");
                         await (handleResponse(await postBookmarkInfo(
-                            1, 1, widget.chapterValue!.chapterNumber)));
+                          widget.bookId == 0 ? 1 : widget.bookId,
+                          widget.userId == 0 ? 1 : widget.userId,
+                          widget
+                              .epubReaderController.currentValue!.chapterNumber,
+                        )));
+                        print("teste");
                         widget.onBookmarkAdded();
                       } catch (e) {
                         widget.onBookmarkAdded();
@@ -135,7 +147,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                         widget.bookmarksinfo.any(
                           (bookmark) =>
                               bookmark.bookmarkedindex ==
-                              widget.chapterValue?.chapterNumber,
+                              widget.epubReaderController.currentValue!
+                                  .chapterNumber,
                         )
                             ? Icons.bookmark
                             : Icons.bookmark_border,
@@ -147,7 +160,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                         widget.bookmarksinfo.any(
                           (bookmark) =>
                               bookmark.bookmarkedindex ==
-                              widget.chapterValue?.chapterNumber,
+                              widget.epubReaderController.currentValue!
+                                  .chapterNumber,
                         )
                             ? 'Desmarcar essa página'
                             : 'Marcar essa página',
@@ -234,7 +248,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                                           ),
                                         );
                                       } else if (snapshot.hasError) {
-                                        return Text(
+                                        return const Text(
                                             'Erro ao carregar o título do capítulo');
                                       } else {
                                         return const CircularProgressIndicator();
@@ -427,8 +441,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
             TextButton(
               onPressed: () async {
                 try {
-                  await (handleResponse(
-                      await removeBookmarkNotesInfo(bookmark.id!.toInt())));
+                  await (handleResponse(await removeBookmarkNotesInfo(
+                      bookmark.note![0].id!.toInt())));
                   Navigator.pop(context);
                   widget.onBookmarkAdded();
                 } catch (e) {

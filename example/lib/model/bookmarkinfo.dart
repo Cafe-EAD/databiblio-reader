@@ -28,16 +28,22 @@ class Bookmarkedinfo {
 }
 
 class Note {
+  int? id;
   String? notetext;
 
-  Note({this.notetext});
+  Note({
+    this.id,
+    this.notetext,
+  });
 
   Note.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
     notetext = json['notetext'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
+    data['id'] = id;
     data['notetext'] = notetext;
     return data;
   }

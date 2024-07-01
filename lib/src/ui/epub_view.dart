@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:epub_view/src/data/epub_cfi_reader.dart';
@@ -7,11 +6,14 @@ import 'package:epub_view/src/data/epub_parser.dart';
 import 'package:epub_view/src/data/models/chapter.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 import 'package:epub_view/src/data/models/paragraph.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 export 'package:epubx/epubx.dart' hide Image;
+
+export 'utils/context_menu_stub.dart' if (dart.library.html) 'utils/context_menu_web.dart';
 
 part '../epub_controller.dart';
 part '../helpers/epub_view_builders.dart';
@@ -64,6 +66,7 @@ class _EpubViewState extends State<EpubView> {
   EpubCfiReader? _epubCfiReader;
   EpubChapterViewValue? _currentValue;
   final _chapterIndexes = <int>[];
+  static String? _selectedText = '';
 
   EpubController get _controller => widget.controller;
 
@@ -88,6 +91,8 @@ class _EpubViewState extends State<EpubView> {
       if (mounted) {
         setState(() {});
       }
+
+    
     });
   }
 
@@ -103,8 +108,7 @@ class _EpubViewState extends State<EpubView> {
       return true;
     }
     _chapters = parseChapters(_controller._document!);
-    final parseParagraphsResult =
-        parseParagraphs(_chapters, _controller._document!.Content);
+    final parseParagraphsResult = parseParagraphs(_chapters, _controller._document!.Content);
     _paragraphs = parseParagraphsResult.flatParagraphs;
     _chapterIndexes.addAll(parseParagraphsResult.chapterIndexes);
 
@@ -120,8 +124,7 @@ class _EpubViewState extends State<EpubView> {
   }
 
   void _changeListener() {
-    if (_paragraphs.isEmpty ||
-        _itemPositionListener!.itemPositions.value.isEmpty) {
+    if (_paragraphs.isEmpty || _itemPositionListener!.itemPositions.value.isEmpty) {
       return;
     }
     final position = _itemPositionListener!.itemPositions.value.first;
@@ -167,11 +170,10 @@ class _EpubViewState extends State<EpubView> {
     );
   }
 
-  void _onTextToSpeech(){
-
-  }
+  void _onTextToSpeech() {}
 
   void _onSelectionChanged(String? selection) {
+    _selectedText = selection ?? '';
     _controller.selectedText = selection;
   }
 
@@ -211,12 +213,10 @@ class _EpubViewState extends State<EpubView> {
       return;
     } else {
       final paragraph = _paragraphByIdRef(hrefIdRef);
-      final chapter =
-          paragraph != null ? _chapters[paragraph.chapterIndex] : null;
+      final chapter = paragraph != null ? _chapters[paragraph.chapterIndex] : null;
 
       if (chapter != null && paragraph != null) {
-        final paragraphIndex =
-            _epubCfiReader?.getParagraphIndexByElement(paragraph.element);
+        final paragraphIndex = _epubCfiReader?.getParagraphIndexByElement(paragraph.element);
         final cfi = _epubCfiReader?.generateCfi(
           book: _controller._document,
           chapter: chapter,
@@ -230,18 +230,15 @@ class _EpubViewState extends State<EpubView> {
     }
   }
 
-  Paragraph? _paragraphByIdRef(String idRef) =>
-      _paragraphs.firstWhereOrNull((paragraph) {
+  Paragraph? _paragraphByIdRef(String idRef) => _paragraphs.firstWhereOrNull((paragraph) {
         if (paragraph.element.id == idRef) {
           return true;
         }
 
-        return paragraph.element.children.isNotEmpty &&
-            paragraph.element.children[0].id == idRef;
+        return paragraph.element.children.isNotEmpty && paragraph.element.children[0].id == idRef;
       });
 
-  EpubChapter? _chapterByFileName(String? fileName) =>
-      _chapters.firstWhereOrNull((chapter) {
+  EpubChapter? _chapterByFileName(String? fileName) => _chapters.firstWhereOrNull((chapter) {
         if (fileName != null) {
           if (chapter.ContentFileName!.contains(fileName)) {
             return true;
@@ -327,92 +324,123 @@ class _EpubViewState extends State<EpubView> {
         ),
       );
 
-
-
   static Widget _chapterBuilder(
-    BuildContext context,
-    EpubViewBuilders builders,
-    EpubBook document,
-    List<EpubChapter> chapters,
-    List<Paragraph> paragraphs,
-    int index,
-    int chapterIndex,
-    int paragraphIndex,
-    ExternalLinkPressed onExternalLinkPressed,
-    OnSelectedChanged onSelectedChanged,
-    OnTextToSpeech onTextToSpeech
-  ) {
+      BuildContext context,
+      EpubViewBuilders builders,
+      EpubBook document,
+      List<EpubChapter> chapters,
+      List<Paragraph> paragraphs,
+      int index,
+      int chapterIndex,
+      int paragraphIndex,
+      ExternalLinkPressed onExternalLinkPressed,
+      OnSelectedChanged onSelectedChanged,
+      OnTextToSpeech onTextToSpeech) {
     if (paragraphs.isEmpty) {
       return Container();
     }
 
-    //final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
-    //final options = defaultBuilder.options;
     final options = builders.options;
 
     return Column(
       children: <Widget>[
         if (chapterIndex >= 0 && paragraphIndex == 0)
           builders.chapterDividerBuilder(chapters[chapterIndex]),
-        SelectionArea(
-          /*
-          contextMenuBuilder: (context, selectableTextState) {
-            return AdaptiveTextSelectionToolbar(
-              anchors: selectableTextState.contextMenuAnchors,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    selectableTextState.copySelection(SelectionChangedCause.toolbar);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Text copied to clipboard')),
+        GestureDetector(
+          onSecondaryTapDown: (details) {
+            if (_selectedText?.isNotEmpty ?? false) {
+              _showContextMenu(context, details.globalPosition, onSelectedChanged);
+            }
+          },
+          child: SelectionArea(
+            contextMenuBuilder: (context, selectableTextState) {
+              return AdaptiveTextSelectionToolbar(
+                anchors: selectableTextState.contextMenuAnchors,
+                children: [
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.black,
+                      child: const Text(
+                        'Marcar Texto',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      onTextToSpeech();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      color: Colors.black,
+                      child: const Text(
+                        'Ouvir',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+            onSelectionChanged: (selection) {
+              onSelectedChanged(selection?.plainText);
+            },
+            child: Html(
+              data: paragraphs[index].element.outerHtml,
+              onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
+              style: {
+                'html': Style(
+                  padding: HtmlPaddings.only(
+                    top: (options.paragraphPadding as EdgeInsets?)?.top,
+                    right: (options.paragraphPadding as EdgeInsets?)?.right,
+                    bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
+                    left: (options.paragraphPadding as EdgeInsets?)?.left,
+                  ),
+                ).merge(Style.fromTextStyle(options.textStyle)),
+              },
+              extensions: [
+                TagExtension(
+                  tagsToExtend: {"img"},
+                  builder: (imageContext) {
+                    final url = imageContext.attributes['src']!.replaceAll('../', '');
+                    final content = Uint8List.fromList(document.Content!.Images![url]!.Content!);
+                    return Image(
+                      image: MemoryImage(content),
                     );
                   },
-                  child: Text('Copy'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Custom Action')),
-                    );
-                  },
-                  child: Text('Custom Action'),
                 ),
               ],
-            );
-          },
-          */
-          onSelectionChanged: (selection) {
-            //print(selection?.plainText);
-            onSelectedChanged(selection?.plainText);
-          },
-          child: Html(
-            data: paragraphs[index].element.outerHtml,
-            onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
-            style: {
-              'html': Style(
-                padding: HtmlPaddings.only(
-                  top: (options.paragraphPadding as EdgeInsets?)?.top,
-                  right: (options.paragraphPadding as EdgeInsets?)?.right,
-                  bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
-                  left: (options.paragraphPadding as EdgeInsets?)?.left,
-                ),
-              ).merge(Style.fromTextStyle(options.textStyle)),
-            },
-            extensions: [
-              TagExtension(
-                tagsToExtend: {"img"},
-                builder: (imageContext) {
-                  final url =
-                  imageContext.attributes['src']!.replaceAll('../', '');
-                  final content = Uint8List.fromList(
-                      document.Content!.Images![url]!.Content!);
-                  return Image(
-                    image: MemoryImage(content),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
+        ),
+      ],
+    );
+  }
+
+  static void _showContextMenu(
+      BuildContext context, Offset position, OnSelectedChanged onSelectedChanged) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        overlay.size.width - position.dx,
+        overlay.size.height - position.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'Marcar Texto',
+          child: const Text('Marcar Texto'),
+          onTap: () {},
+        ),
+        PopupMenuItem(
+          value: 'Ouvir',
+          child: const Text('Ouvir'),
+          onTap: () {},
         ),
       ],
     );
@@ -427,18 +455,17 @@ class _EpubViewState extends State<EpubView> {
       itemPositionsListener: _itemPositionListener,
       itemBuilder: (BuildContext context, int index) {
         return widget.builders.chapterBuilder(
-          context,
-          widget.builders,
-          widget.controller._document!,
-          _chapters,
-          _paragraphs,
-          index,
-          _getChapterIndexBy(positionIndex: index),
-          _getParagraphIndexBy(positionIndex: index),
-          _onLinkPressed,
-          _onSelectionChanged,
-            _onTextToSpeech
-        );
+            context,
+            widget.builders,
+            widget.controller._document!,
+            _chapters,
+            _paragraphs,
+            index,
+            _getChapterIndexBy(positionIndex: index),
+            _getParagraphIndexBy(positionIndex: index),
+            _onLinkPressed,
+            _onSelectionChanged,
+            _onTextToSpeech);
       },
     );
   }
@@ -474,8 +501,6 @@ class _EpubViewState extends State<EpubView> {
       }
     }();
 
-    //final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
-    //final options = defaultBuilder.options;
     final options = builders.options;
 
     return AnimatedSwitcher(

@@ -5,6 +5,7 @@ import 'package:epub_view_example/network/network_utils.dart';
 import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+import 'package:flutter/foundation.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
@@ -114,7 +115,7 @@ _getMenu(widget) {
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
-  MyHomePage({super.key, required this.onToggleTheme});
+  const MyHomePage({super.key, required this.onToggleTheme});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -143,13 +144,11 @@ class _MyHomePageState extends State<MyHomePage>
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
   bool _isBookmarkMarked = false;
 
-  late bool hasEditButton;
-  late bool hasDeleteButton;
-
   EpubChapterViewValue? _currentChapterValue;
 
   @override
   void initState() {
+    if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
     var bookName = Uri.base.queryParameters['bookname'] ?? "";
     var contextId = Uri.base.queryParameters['contextid'] ?? "";
@@ -158,8 +157,11 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-      // document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
-      document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+      document: EpubDocument.openAsset(
+        kDebugMode
+            ? 'assets/burroughs-mucker.epub'
+            : '$contextId/$revision/$bookName',
+      ),
     );
 
     _builderOptions = CustomBuilderOptions();
@@ -272,23 +274,11 @@ class _MyHomePageState extends State<MyHomePage>
           title: EpubViewActualChapter(
             controller: _epubReaderController,
             builder: (chapterValue) {
-              print('Teste');
-              print('Chapter Value: ${chapterValue.toString()}');
-              print(
-                  'Chapter chapterNumber: ${chapterValue?.chapterNumber.toString()}');
-              _currentChapterValue = chapterValue;
-
               return Text(
                 chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
                 textAlign: TextAlign.start,
               );
             },
-
-            // builder: (chapterValue) => Text(
-            //   "teste",
-            //   // chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-            //   textAlign: TextAlign.start,
-            // ),
           ),
           actions: <Widget>[
             IconButton(
@@ -302,7 +292,7 @@ class _MyHomePageState extends State<MyHomePage>
               icon: const Icon(Icons.bookmark),
               color: Theme.of(context).colorScheme.onBackground,
               onPressed: () async {
-                await _getInfos();
+                await _getInfoBookMark();
                 setState(() {
                   _showSearchField = !_showSearchField;
                   _bottomSheetState = 1;
@@ -376,6 +366,8 @@ class _MyHomePageState extends State<MyHomePage>
           chapterValue: _currentChapterValue,
           epubReaderController: _epubReaderController,
           onBookmarkAdded: _updateBookmarks,
+          bookId: bookId,
+          userId: userId,
         );
       default:
         return Container();
@@ -434,7 +426,7 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
-  _getInfos() async {
+  _getInfoBookMark() async {
     List<dynamic> response =
         await (handleResponse(await getBookmarksInfo(1, 1)));
 
@@ -458,7 +450,7 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _updateBookmarks() {
-    _getInfos();
+    _getInfoBookMark();
   }
 
   /*

@@ -5,19 +5,18 @@ class BookmarkModel {
   int index;
   NoteModel? note;
 
-  BookmarkModel({ required this.id, required this.index, this.note });
+  BookmarkModel({required this.id, required this.index, this.note});
 
   factory BookmarkModel.fromJson(Map<String, dynamic> json) {
     return BookmarkModel(
         id: json[CommonModelKeys.id],
         index: json[BookmarkKeys.index],
-        note: json[BookmarkKeys.note]
-    );
+        note: json[BookmarkKeys.note]);
   }
 }
 
 class NoteModel {
   String noteText;
 
-  NoteModel({ required this.noteText });
+  NoteModel({required this.noteText});
 }
