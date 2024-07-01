@@ -23,6 +23,7 @@ print('capitulo: ${value!.chapterNumber}');
 print('paragrafo: ${value!.paragraphNumber}');
 print('index: ${value!.position.index}');
 print('texto: ${selectedText!}');
+print('quantidade caracter: ${selectedText!.length}');
 print('cfi: ${cfi!}');
 print('========================================');
 }
