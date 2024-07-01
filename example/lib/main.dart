@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
-import 'package:epub_view_example/model/bookmarkinfo.dart';
 import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
@@ -146,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage>
   String otherFont = "OpenDyslexic";
   late TabController _tabController;
   List<BookmarkModel> bookmarks = [];
-  List<Bookmarkedinfo> bookmarksinfo = [];
+  List<BookmarkModel> bookmarksinfo = [];
 
   bool _showSearchField = false;
   final TextEditingController _searchController = TextEditingController();
@@ -472,8 +471,8 @@ class _MyHomePageState extends State<MyHomePage>
 
       if (response.statusCode == 200) {
         final List<dynamic> responseData = jsonDecode(response.body);
-        List<Bookmarkedinfo> bookmarks = responseData
-            .map((bookmark) => Bookmarkedinfo.fromJson(bookmark))
+        List<BookmarkModel> bookmarks = responseData
+            .map((bookmark) => BookmarkModel.fromJson(bookmark))
             .toList();
         setState(() {
           bookmarksinfo = bookmarks;

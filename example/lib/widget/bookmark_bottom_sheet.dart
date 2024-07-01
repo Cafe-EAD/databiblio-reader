@@ -1,7 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api, avoid_print, use_build_context_synchronously
 
 import 'package:epub_view/epub_view.dart';
-import 'package:epub_view_example/model/bookmarkinfo.dart';
+import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/network/rest.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
@@ -11,7 +11,7 @@ class BookmarkBottomSheet extends StatefulWidget {
   final Function() onBookmarkToggle;
   final Function() onClose;
   final TabController tabController;
-  final List<Bookmarkedinfo> bookmarksinfo;
+  final List<BookmarkModel> bookmarksinfo;
   final EpubChapterViewValue? chapterValue;
   final EpubController epubReaderController;
   final Function() onBookmarkAdded;
@@ -103,7 +103,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     )) {
                       try {
                         // print("Remover");
-                        Bookmarkedinfo bookmarkToRemove =
+                        BookmarkModel bookmarkToRemove =
                             widget.bookmarksinfo.firstWhere(
                           (bookmark) =>
                               bookmark.bookmarkedindex ==
@@ -361,7 +361,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
     );
   }
 
-  void _showNoteDialog(BuildContext context, Bookmarkedinfo bookmark) async {
+  void _showNoteDialog(BuildContext context, BookmarkModel bookmark) async {
     TextEditingController noteController = TextEditingController(
       text: bookmark.note?.isNotEmpty == true ? bookmark.note![0].notetext : '',
     );
@@ -410,7 +410,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, Bookmarkedinfo bookmark) async {
+  void _showDeleteDialog(BuildContext context, BookmarkModel bookmark) async {
     await showDialog(
       context: context,
       builder: (context) {

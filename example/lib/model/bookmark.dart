@@ -1,23 +1,42 @@
-import '../utils/model_keys.dart';
+// import '../utils/model_keys.dart';
 
 class BookmarkModel {
-  int id;
-  int index;
-  NoteModel? note;
+  int? id;
+  int? bookmarkedindex;
+  List<NoteModel>? note;
 
-  BookmarkModel({required this.id, required this.index, this.note});
+  BookmarkModel({this.id, this.bookmarkedindex, this.note});
 
-  factory BookmarkModel.fromJson(Map<String, dynamic> json) {
-    return BookmarkModel(
-        id: json[CommonModelKeys.id],
-        index: json[BookmarkKeys.index],
-        note: json[BookmarkKeys.note]);
+  BookmarkModel.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    bookmarkedindex = json['bookmarkedindex'];
+    if (json['note'] != null) {
+      note = <NoteModel>[];
+      json['note'].forEach((v) {
+        note!.add(NoteModel.fromJson(v));
+      });
+    }
   }
 }
 
 class NoteModel {
-  String noteText;
-  int id;
+  int? id;
+  String? notetext;
 
-  NoteModel({required this.noteText, required this.id});
+  NoteModel({
+    this.id,
+    this.notetext,
+  });
+
+  NoteModel.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    notetext = json['notetext'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    data['id'] = id;
+    data['notetext'] = notetext;
+    return data;
+  }
 }
