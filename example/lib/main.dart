@@ -1,10 +1,13 @@
 // ignore_for_file: avoid_print
 
-import 'package:anim_search_bar/anim_search_bar.dart';
+
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
-// import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+import 'package:flutter/foundation.dart';
+import 'package:anim_search_bar/anim_search_bar.dart';
+
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
@@ -15,6 +18,7 @@ import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
+
 
 void main() => runApp(const MyApp());
 
@@ -57,6 +61,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       MediaQueryData.fromView(WidgetsBinding.instance.window)
           .platformBrightness;
 
+
   void _setSystemUIOverlayStyle() {
     if (platformBrightness == Brightness.light) {
       SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -95,6 +100,7 @@ class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
   MyHomePage({super.key, required this.onToggleTheme});
 
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -104,6 +110,7 @@ class _MyHomePageState extends State<MyHomePage>
   late EpubController _epubReaderController;
   late SearchMatch searchMatch;
   TextEditingController textController = TextEditingController();
+
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
   late int userId;
@@ -156,6 +163,8 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   void initState() {
+
+    if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
     var bookName = Uri.base.queryParameters['bookname'] ?? "";
     var contextId = Uri.base.queryParameters['contextid'] ?? "";
@@ -164,10 +173,13 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-      // document: EpubDocument.openAsset('$contextId/$revision/$bookName'),
-      document: EpubDocument.openAsset('assets/burroughs-mucker.epub'),
+
+      document: EpubDocument.openAsset(
+        kDebugMode ? 'assets/burroughs-mucker.epub' : '$contextId/$revision/$bookName',
+      ),
     );
     searchMatch = SearchMatch(_epubReaderController);
+
 
     _builderOptions = CustomBuilderOptions();
 
@@ -274,7 +286,6 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
 
-
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
@@ -349,6 +360,7 @@ class _MyHomePageState extends State<MyHomePage>
                       cfi: _epubReaderController.generateEpubCfi()).printar();
                 }
               },
+
             ),
           ],
         ),
@@ -358,9 +370,8 @@ class _MyHomePageState extends State<MyHomePage>
         body: EpubView(
           onChapterChanged: (value) {
             postLocationData(value?.position.index);
-            print(value?.chapterNumber);
-          },
 
+          },
           /*
           onTextToSpeech: (value) {
             _speak(value);
@@ -373,33 +384,33 @@ class _MyHomePageState extends State<MyHomePage>
           ),
           controller: _epubReaderController,
         ),
-        // bottomSheet:
-        //     _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+
+        bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
 
-  // Widget _getShowContainer() {
-  //   switch (_bottomSheetState) {
-  //     case 1:
-  //       return BookmarkBottomSheet(
-  //         isBookmarkMarked: _isBookmarkMarked,
-  //         onBookmarkToggle: () {
-  //           setState(() {
-  //             _isBookmarkMarked = !_isBookmarkMarked;
-  //           });
-  //         },
-  //         onClose: () {
-  //           setState(() {
-  //             _showSearchField = !_showSearchField;
-  //             _bottomSheetState = 0;
-  //           });
-  //         },
-  //         tabController: _tabController,
-  //         bookmarkFake: bookmarkFake,
-  //       );
-  //     default:
-  //       return Container();
-  //   }
-  // }
+  Widget _getShowContainer() {
+    switch (_bottomSheetState) {
+      case 1:
+        return BookmarkBottomSheet(
+          isBookmarkMarked: _isBookmarkMarked,
+          onBookmarkToggle: () {
+            setState(() {
+              _isBookmarkMarked = !_isBookmarkMarked;
+            });
+          },
+          onClose: () {
+            setState(() {
+              _showSearchField = !_showSearchField;
+              _bottomSheetState = 0;
+            });
+          },
+          tabController: _tabController,
+          bookmarkFake: bookmarkFake,
+        );
+      default:
+        return Container();
+    }
+  }
 
   void _showSearchDialog(BuildContext context) {
     showDialog(
@@ -420,6 +431,7 @@ class _MyHomePageState extends State<MyHomePage>
               filled: true,
               fillColor:
                   Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
+
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
