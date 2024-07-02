@@ -35,16 +35,18 @@ Map<String, String> buildHeaderTokens() {
 Uri buildBaseUrl(String endPoint) {
   Uri url = Uri.parse(endPoint);
   if (!endPoint.startsWith('http')) url = Uri.parse('$BASE_URL$endPoint');
-
   return url;
 }
 
 Future<Response> buildHttpResponse(String endPoint,
-    {HttpMethod method = HttpMethod.GET, Map? request, bool isStripePayment = false}) async {
+    {HttpMethod method = HttpMethod.GET,
+    Map? request,
+    bool isStripePayment = false}) async {
   if (await isNetworkAvailable()) {
     var headers = buildHeaderTokens();
     const wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
-    Uri url = buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
+    Uri url =
+        buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
     log(url);
 
     Response response;
@@ -99,7 +101,8 @@ String parseHtmlString(String? htmlString) {
   return parse(parse(htmlString).body!.text).documentElement!.text;
 }
 
-Future<MultipartRequest> getMultiPartRequest(String endPoint, {String? baseUrl}) async {
+Future<MultipartRequest> getMultiPartRequest(String endPoint,
+    {String? baseUrl}) async {
   String url = baseUrl ?? buildBaseUrl(endPoint).toString();
   log(url);
   return MultipartRequest('POST', Uri.parse(url));
@@ -107,7 +110,8 @@ Future<MultipartRequest> getMultiPartRequest(String endPoint, {String? baseUrl})
 
 Future<void> sendMultiPartRequest(MultipartRequest multiPartRequest,
     {Function(dynamic)? onSuccess, Function(dynamic)? onError}) async {
-  http.Response response = await http.Response.fromStream(await multiPartRequest.send());
+  http.Response response =
+      await http.Response.fromStream(await multiPartRequest.send());
   print("Result: ${response.statusCode}");
 
   if (response.statusCode.isSuccessful()) {

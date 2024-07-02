@@ -1,8 +1,9 @@
 // ignore_for_file: avoid_print
-
+import 'dart:convert';
 
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
+import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
@@ -19,6 +20,7 @@ import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
 
+import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 void main() => runApp(const MyApp());
 
@@ -61,7 +63,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       MediaQueryData.fromView(WidgetsBinding.instance.window)
           .platformBrightness;
 
-
   void _setSystemUIOverlayStyle() {
     if (platformBrightness == Brightness.light) {
       SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -93,13 +94,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         themeMode: _themeMode,
         debugShowCheckedModeBanner: false,
         home: MyHomePage(onToggleTheme: _toggleTheme),
+        builder: (context, widget) {
+          widget = _getMenu(widget);
+          return widget!;
+        },
       );
+}
+
+_getMenu(widget) {
+  return Overlay(
+    initialEntries: [
+      OverlayEntry(
+        builder: (context) {
+          return ToastProvider(
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+              child: widget!,
+            ),
+          );
+        },
+      ),
+    ],
+  );
 }
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
   MyHomePage({super.key, required this.onToggleTheme});
-
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -124,46 +145,17 @@ class _MyHomePageState extends State<MyHomePage>
   String otherFont = "OpenDyslexic";
   late TabController _tabController;
   List<BookmarkModel> bookmarks = [];
+  List<BookmarkModel> bookmarksinfo = [];
 
   bool _showSearchField = false;
   final TextEditingController _searchController = TextEditingController();
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
   bool _isBookmarkMarked = false;
 
-  late bool hasEditButton;
-  late bool hasDeleteButton;
-  //dados ficticios para bookmark
-  final List<Map<String, dynamic>> bookmarkFake = [
-    {
-      "local": "Chapter I. - Parágrafo 1",
-      "conteudo":
-          "BILLY BYRNE was a product of the streets and alleys of Chicago's great West Side. From Halsted to Robey, and from Grand Avenue to Lake Street there was scarce a bartender whom Billy knew not by his first name. And, in proportion to their number which was considerably less, he knew the patrolmen and plain clothes men equally as well, but not so pleasantly.",
-    },
-    {
-      "local": "Chapter II. - Parágrafo 1",
-      "conteudo":
-          "WHEN Billy opened his eyes again he could not recall, for the instant, very much of his recent past. At last he remembered with painful regret the drunken sailor it had been his intention to roll. He felt deeply chagrined that his rightful prey should have escaped him. He couldn't understand how it had happened.",
-    },
-    {
-      "local": "Chapter II. - Parágrafo 3",
-      "conteudo":
-          "His head ached frightfully and he was very sick. So sick that the room in which he lay seemed to be rising and falling in a horribly realistic manner. Every time it dropped it brought Billy's stomach nearly to his mouth.",
-    },
-    {
-      "local": "Chapter IV. - Parágrafo 4",
-      "conteudo":
-          "Ward was pleased that he had not been forced to prolong the galling masquerade of valet to his inferior officer. He was hopeful, too,",
-    },
-    {
-      "local": "Chapter V. - Parágrafo 14",
-      "conteudo":
-          "The girl made no comment, but Divine saw the contempt in her face.",
-    },
-  ];
+  EpubChapterViewValue? _currentChapterValue;
 
   @override
   void initState() {
-
     if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
     var bookName = Uri.base.queryParameters['bookname'] ?? "";
@@ -173,13 +165,13 @@ class _MyHomePageState extends State<MyHomePage>
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
     _epubReaderController = EpubController(
-
       document: EpubDocument.openAsset(
-        kDebugMode ? 'assets/burroughs-mucker.epub' : '$contextId/$revision/$bookName',
+        kDebugMode
+            ? 'assets/burroughs-mucker.epub'
+            : '$contextId/$revision/$bookName',
       ),
     );
     searchMatch = SearchMatch(_epubReaderController);
-
 
     _builderOptions = CustomBuilderOptions();
 
@@ -190,7 +182,8 @@ class _MyHomePageState extends State<MyHomePage>
           })
         });
 
-    getBookmarks(userId, bookId).then((value) => bookmarks = value);
+    getBookmarks(userId, bookId)
+        .then((value) => bookmarks = value as List<BookmarkModel>);
 
     super.initState();
     _initTts();
@@ -285,16 +278,17 @@ class _MyHomePageState extends State<MyHomePage>
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           title: EpubViewActualChapter(
             controller: _epubReaderController,
-            builder: (chapterValue) => Text(
-              chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-              textAlign: TextAlign.start,
-            ),
+            builder: (chapterValue) {
+              return Text(
+                chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+                textAlign: TextAlign.start,
+              );
+            },
           ),
           actions: <Widget>[
             IconButton(
@@ -307,7 +301,8 @@ class _MyHomePageState extends State<MyHomePage>
             IconButton(
               icon: const Icon(Icons.bookmark),
               color: Theme.of(context).colorScheme.onBackground,
-              onPressed: () {
+              onPressed: () async {
+                await _getInfoBookMark();
                 setState(() {
                   _showSearchField = !_showSearchField;
                   _bottomSheetState = 1;
@@ -355,12 +350,13 @@ class _MyHomePageState extends State<MyHomePage>
                     _epubReaderController.currentValueListenable.value !=
                         null) {
                   HighlightModel(
-                      value: _epubReaderController.currentValueListenable.value,
-                      selectedText: _epubReaderController.selectedText,
-                      cfi: _epubReaderController.generateEpubCfi()).printar();
+                          value: _epubReaderController
+                              .currentValueListenable.value,
+                          selectedText: _epubReaderController.selectedText,
+                          cfi: _epubReaderController.generateEpubCfi())
+                      .printar();
                 }
               },
-
             ),
           ],
         ),
@@ -370,7 +366,6 @@ class _MyHomePageState extends State<MyHomePage>
         body: EpubView(
           onChapterChanged: (value) {
             postLocationData(value?.position.index);
-
           },
           /*
           onTextToSpeech: (value) {
@@ -384,8 +379,8 @@ class _MyHomePageState extends State<MyHomePage>
           ),
           controller: _epubReaderController,
         ),
-
-        bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+        bottomSheet:
+            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
 
   Widget _getShowContainer() {
@@ -405,7 +400,12 @@ class _MyHomePageState extends State<MyHomePage>
             });
           },
           tabController: _tabController,
-          bookmarkFake: bookmarkFake,
+          bookmarksinfo: bookmarksinfo,
+          chapterValue: _currentChapterValue,
+          epubReaderController: _epubReaderController,
+          onBookmarkAdded: _updateBookmarks,
+          bookId: bookId,
+          userId: userId,
         );
       default:
         return Container();
@@ -431,7 +431,6 @@ class _MyHomePageState extends State<MyHomePage>
               filled: true,
               fillColor:
                   Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
-
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -463,6 +462,31 @@ class _MyHomePageState extends State<MyHomePage>
         );
       },
     );
+  }
+
+  _getInfoBookMark() async {
+    try {
+      final response = await getBookmarks(
+          userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(response.body);
+        List<BookmarkModel> bookmarks = responseData
+            .map((bookmark) => BookmarkModel.fromJson(bookmark))
+            .toList();
+        setState(() {
+          bookmarksinfo = bookmarks;
+        });
+      } else {
+        print("Erro na requisição: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Erro ao obter bookmarks: $e");
+    }
+  }
+
+  void _updateBookmarks() {
+    _getInfoBookMark();
   }
 
   /*

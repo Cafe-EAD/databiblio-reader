@@ -1,4 +1,5 @@
-const CodeCanyonLink = "https://codecanyon.net/item/granth-flutter-ebook-app-admin-panel/26129119?s_rank=13";
+const CodeCanyonLink =
+    "https://codecanyon.net/item/granth-flutter-ebook-app-admin-panel/26129119?s_rank=13";
 
 ///Theme mode type
 const ThemeModeLight = 0;
@@ -127,3 +128,7 @@ const DISCOUNT = 'DISCOUNT';
 const DISCOUNT_PRICE = "DISCOUNT_PRICE";
 const TOTAL_MRP = "TOTAL_MRP";
 const TOTAl_DISCOUNT_AMOUNT = 'TOTAl_DISCOUNT_AMOUNT';
+
+const URLBOOK =
+    'https://databiblion.cafeeadhost.com.br/webservice/rest/server.php';
+const WSTOKEN = '2ab3f1e2a757c5bc5e1d3a32c7680395';
