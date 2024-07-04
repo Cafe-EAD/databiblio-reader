@@ -32,6 +32,10 @@ typedef ChaptersBuilder = Widget Function(
 );
 
 typedef ChapterDividerBuilder = Widget Function(EpubChapter value);
+typedef ParagraphBuilder = Widget Function(
+  String text,
+  int paragraphIndex,
+);
 
 class EpubViewBuilders<T> {
   /// Root view builder
@@ -49,6 +53,11 @@ class EpubViewBuilders<T> {
   /// Additional options for builder
   final T options;
 
+  final ParagraphBuilder? paragraphBuilder;
+
+  // final void Function(int? index) onParagraphDisplayed;
+  final void Function(int index) onParagraphDisplayed;
+
   const EpubViewBuilders({
     required this.options,
     this.builder = _EpubViewState._builder,
@@ -56,7 +65,10 @@ class EpubViewBuilders<T> {
     this.chapterDividerBuilder = _EpubViewState._chapterDividerBuilder,
     this.loaderBuilder,
     this.errorBuilder,
+    this.paragraphBuilder,
+    this.onParagraphDisplayed = _emptyParagraphFunction,
   });
+  static void _emptyParagraphFunction(int index) {}
 }
 
 enum EpubViewLoadingState {
@@ -99,11 +111,8 @@ class DefaultBuilderOptions {
     this.transitionBuilder = DefaultBuilderOptions._transitionBuilder,
     this.chapterPadding = const EdgeInsets.all(8),
     this.paragraphPadding = const EdgeInsets.symmetric(horizontal: 16),
-    this.textStyle = const TextStyle(
-      height: 1.25,
-      fontSize: 16,
-      fontFamily: "OpenDyslexic"
-    ),
+    this.textStyle =
+        const TextStyle(height: 1.25, fontSize: 16, fontFamily: "OpenDyslexic"),
   });
 
   static Widget _transitionBuilder(Widget child, Animation<double> animation) =>

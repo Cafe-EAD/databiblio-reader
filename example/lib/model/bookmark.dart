@@ -1,5 +1,3 @@
-// import '../utils/model_keys.dart';
-
 class BookmarkModel {
   int? id;
   int? bookmarkedindex;
