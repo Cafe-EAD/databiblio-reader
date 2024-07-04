@@ -1,5 +1,7 @@
 part of 'ui/epub_view.dart';
 
+const int charactersPerPage = 1024;
+
 class EpubController {
   EpubController({
     required this.document,
@@ -14,7 +16,6 @@ class EpubController {
   EpubBook? _document;
   String? selectedText;
 
-  final int charactersPerPage = 1024;
   int currentPage = 1;
 
   EpubChapterViewValue? get currentValue => _epubViewState?._currentValue;
