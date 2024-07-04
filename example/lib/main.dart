@@ -244,8 +244,7 @@ class _MyHomePageState extends State<MyHomePage>
           })
         });
 
-    getBookmarks(userId, bookId)
-        .then((value) => bookmarks = value as List<BookmarkModel>);
+    getBookmarks(userId, bookId).then((value) => bookmarks = value);
 
     super.initState();
     _initTts();
@@ -577,24 +576,11 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   _getInfoBookMark() async {
-    try {
-      final response = await getBookmarks(
-          userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseData = jsonDecode(response.body);
-        List<BookmarkModel> bookmarks = responseData
-            .map((bookmark) => BookmarkModel.fromJson(bookmark))
-            .toList();
-        setState(() {
-          bookmarksinfo = bookmarks;
-        });
-      } else {
-        print("Erro na requisição: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Erro ao obter bookmarks: $e");
-    }
+    final bookmarks =
+        await getBookmarks(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+    setState(() {
+      bookmarksinfo = bookmarks;
+    });
   }
 
   void _updateBookmarks() {

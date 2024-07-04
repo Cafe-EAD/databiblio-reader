@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/common.dart';
 import 'package:epub_view_example/utils/constants.dart';
 import 'package:http/http.dart' as http;
@@ -9,7 +10,7 @@ import 'network_utils.dart';
 const baseUrl =
     'https://databiblion.cafeeadhost.com.br/webservice/rest/server.php';
 
-Future<http.Response> getBookmarks(int userId, int bookId) async {
+Future<List<BookmarkModel>> getBookmarks(int userId, int bookId) async {
   try {
     String wsfunction = 'local_wsgetbooks_get_bookmarks';
     Uri url = Uri.parse(baseUrl).replace(queryParameters: {
@@ -22,7 +23,11 @@ Future<http.Response> getBookmarks(int userId, int bookId) async {
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      return response;
+      final List<dynamic> responseData = jsonDecode(response.body);
+      List<BookmarkModel> result = responseData
+          .map((bookmark) => BookmarkModel.fromJson(bookmark))
+          .toList();
+      return result;
     } else {
       throw Exception('Erro na requisição: ${response.statusCode}');
     }
