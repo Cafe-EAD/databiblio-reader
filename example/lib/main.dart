@@ -320,12 +320,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         body: EpubView(
           onChapterChanged: (value) {
             postLocationData(value?.position.index);
+            _epubReaderController.updateCurrentPage();
           },
           /*
           onTextToSpeech: (value) {
             _speak(value);
           },
-
            */
           builders: EpubViewBuilders(
             options: _builderOptions,
