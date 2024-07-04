@@ -37,7 +37,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-             Text(
+             const Text(
               'Tamanho da fonte',
               style:  TextStyle(
                 fontSize: 24.0,
@@ -47,7 +47,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
             const Gap(10),
             FontSizeAdjuster(changeFontSize: _updateFontSize, initialFontSize: widget.builderOptions.textStyle.fontSize!),
             const Gap(10),
-             Text(
+             const Text(
               'Fonte disléxica',
               style:  TextStyle(
                 fontSize: 24.0,
@@ -67,9 +67,12 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
               },
             ),
             const Gap(10),
-             Text(
+             const Text(
               'Tema Escuro',
-              style:  widget.builderOptions.textStyle,
+              style:  TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Gap(10),
             Switch(
