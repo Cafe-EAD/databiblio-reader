@@ -25,10 +25,6 @@ import 'widget/search_match.dart';
 
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
-
-
-
-
 class ReaderScreen extends StatefulWidget {
   final Function(bool) onToggleTheme;
 
@@ -124,9 +120,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     _initPrefs();
     if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
-    var bookName = Uri.base.queryParameters['bookname'] ?? "";
-    var contextId = Uri.base.queryParameters['contextid'] ?? "";
-    var revision = Uri.base.queryParameters['revision'] ?? "";
+   
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
