@@ -77,23 +77,36 @@ class _QuizModalState extends State<QuizModal> {
             _getQuestionModal(widget.question.questionType),
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
-              child: ElevatedButton(
-                onPressed:
-                    _selectedOptionIndex != null || _openAnswerText != null
-                        ? () {
-                            _selectedOptionIndex = null;
-                            _openAnswerText = null;
-                            widget.onCorrectAnswer();
-                          }
-                        : null,
-                child: Text(
-                  'Responder',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onBackground,
+              child: SizedBox(
+                height: 50, // Set the desired height
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1872F6),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 24.0),
+                    textStyle: const TextStyle(fontSize: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed:
+                      _selectedOptionIndex != null || _openAnswerText != null
+                          ? () {
+                              _selectedOptionIndex = null;
+                              _openAnswerText = null;
+                              widget.onCorrectAnswer();
+                            }
+                          : null,
+                  child: Text(
+                    'Responder',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
                   ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -103,63 +116,68 @@ class _QuizModalState extends State<QuizModal> {
   Widget _getQuestionModal(String type) {
     switch (type) {
       case 'Verdadeiro ou Falso':
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedOptionIndex = 0;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedOptionIndex == 0
-                      ? Colors.grey[500]
-                      : Colors.white,
-                  foregroundColor: _selectedOptionIndex == 0
-                      ? Colors.black
-                      : Colors.grey[800],
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 16.0, horizontal: 24.0),
-                  textStyle: const TextStyle(fontSize: 16.0),
-                  side: _selectedOptionIndex == 0
-                      ? const BorderSide(color: Colors.blue, width: 2.0)
-                      : BorderSide.none,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedOptionIndex = 0;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedOptionIndex == 0
+                        ? Colors.grey[500]
+                        : Colors.white,
+                    foregroundColor: _selectedOptionIndex == 0
+                        ? Colors.black
+                        : Colors.grey[800],
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 24.0),
+                    textStyle: const TextStyle(fontSize: 16.0),
+                    side: _selectedOptionIndex == 0
+                        ? const BorderSide(color: Colors.blue, width: 2.0)
+                        : BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
                   ),
+                  child: const Text('Verdadeiro'),
                 ),
-                child: const Text('Verdadeiro'),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedOptionIndex = 1;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _selectedOptionIndex == 1
-                      ? Colors.grey[500]
-                      : Colors.white,
-                  foregroundColor: _selectedOptionIndex == 1
-                      ? Colors.black
-                      : Colors.grey[800],
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 16.0, horizontal: 24.0),
-                  textStyle: const TextStyle(fontSize: 16.0),
-                  side: _selectedOptionIndex == 1
-                      ? const BorderSide(color: Colors.blue, width: 2.0)
-                      : BorderSide.none,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedOptionIndex = 1;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _selectedOptionIndex == 1
+                        ? Colors.grey[500]
+                        : Colors.white,
+                    foregroundColor: _selectedOptionIndex == 1
+                        ? Colors.black
+                        : Colors.grey[800],
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 24.0),
+                    textStyle: const TextStyle(fontSize: 16.0),
+                    side: _selectedOptionIndex == 1
+                        ? const BorderSide(color: Colors.blue, width: 2.0)
+                        : BorderSide.none,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
                   ),
+                  child: const Text('Falso'),
                 ),
-                child: const Text('Falso'),
               ),
             ),
           ],
@@ -168,6 +186,8 @@ class _QuizModalState extends State<QuizModal> {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: TextFormField(
+            minLines: 3,
+            maxLines: null,
             onChanged: (value) {
               setState(() {
                 _openAnswerText = value;
