@@ -1,5 +1,7 @@
 part of 'ui/epub_view.dart';
 
+const int charactersPerPage = 1024;
+
 class EpubController {
   EpubController({
     required this.document,
@@ -14,6 +16,8 @@ class EpubController {
   EpubBook? _document;
   String? selectedText;
 
+  int currentPage = 1;
+
   EpubChapterViewValue? get currentValue => _epubViewState?._currentValue;
 
   final isBookLoaded = ValueNotifier<bool>(false);
@@ -27,12 +31,8 @@ class EpubController {
   void jumpTo({required int index, double alignment = 0}) async {
     int passCount = 0;
 
-    //WidgetsBinding.instance.addPostFrameCallback((_) {
     while (passCount < 5) {
       if (_epubViewState?._itemScrollController?.isAttached ?? false) {
-        //Future.delayed(const Duration(seconds: 5), () {
-        var controllerAttached = _epubViewState?._itemScrollController?.isAttached;
-        print("controllerAttached (internalCheck) = $controllerAttached");
         _epubViewState?._itemScrollController?.jumpTo(
           index: index,
           alignment: alignment,
@@ -41,7 +41,6 @@ class EpubController {
       }
       await Future.delayed(const Duration(milliseconds: 100));
       passCount++;
-      print("meio segundo passou");
     }
   }
 
@@ -147,11 +146,27 @@ class EpubController {
 
   void _attach(_EpubViewState epubReaderViewState) {
     _epubViewState = epubReaderViewState;
-
     _loadDocument(document);
   }
 
   void _detach() {
     _epubViewState = null;
+  }
+
+  void updateCurrentPage() {
+    final currentValue = this.currentValue;
+    if (currentValue != null) {
+      final positionIndex = currentValue.position.index;
+      final paragraphIndex = _epubViewState?._getAbsParagraphIndexBy(
+        positionIndex: positionIndex,
+        trailingEdge: currentValue.position.itemTrailingEdge,
+        leadingEdge: currentValue.position.itemLeadingEdge,
+      );
+      if (paragraphIndex != null) {
+        final totalCharacters = paragraphIndex * charactersPerPage;
+        currentPage = (totalCharacters / charactersPerPage).ceil();
+        debugPrint('>>> Current Page: $currentPage');
+      }
+    }
   }
 }

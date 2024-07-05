@@ -1,29 +1,27 @@
 // ignore_for_file: avoid_print
 import 'dart:convert';
 
+import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:epub_view/epub_view.dart';
+import 'package:epub_view/src/data/models/chapter_view_value.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:epub_view_example/widget/quiz_modal.dart';
-import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+import 'package:epub_view_example/widget/quiz_modal.dart';
+import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/foundation.dart';
-import 'package:anim_search_bar/anim_search_bar.dart';
-
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
-
-import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 void main() => runApp(const MyApp());
 
@@ -111,7 +109,8 @@ _getMenu(widget) {
         builder: (context) {
           return ToastProvider(
             child: MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(1.0)),
               child: widget!,
             ),
           );
@@ -123,7 +122,7 @@ _getMenu(widget) {
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
-  MyHomePage({super.key, required this.onToggleTheme});
+  const MyHomePage({super.key, required this.onToggleTheme});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -448,6 +447,7 @@ class _MyHomePageState extends State<MyHomePage>
                       _currentQuestionIndex = 0;
                     });
                   }
+                  _epubReaderController.updateCurrentPage();
                 },
                 builders: EpubViewBuilders(
                   options: _builderOptions,
