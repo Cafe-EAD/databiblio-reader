@@ -7,12 +7,14 @@ class BottomSheetContent extends StatefulWidget {
   final Function(double) changeFontSize;
   final CustomBuilderOptions builderOptions;
   final Function() changeFontFamily;
-
+  final bool themeMode;
 
   BottomSheetContent({
     required this.onToggleTheme,
     required this.changeFontSize,
-    required this.builderOptions, required this.changeFontFamily,
+    required this.builderOptions,
+    required this.changeFontFamily,
+    required this.themeMode,
   });
 
   @override
@@ -20,15 +22,15 @@ class BottomSheetContent extends StatefulWidget {
 }
 
 class _BottomSheetContentState extends State<BottomSheetContent> {
-   
-    bool disl = false;
-
+  bool disl = false;
+   bool? tema;
 
   void _updateFontSize(double newFontSize) {
     setState(() {
       widget.changeFontSize(newFontSize);
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -37,19 +39,21 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-             Text(
+            const Text(
               'Tamanho da fonte',
-              style:  TextStyle(
+              style: TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const Gap(10),
-            FontSizeAdjuster(changeFontSize: _updateFontSize, initialFontSize: widget.builderOptions.textStyle.fontSize!),
+            FontSizeAdjuster(
+                changeFontSize: _updateFontSize,
+                initialFontSize: widget.builderOptions.textStyle.fontSize!),
             const Gap(10),
-             Text(
+            const Text(
               'Fonte disléxica',
-              style:  TextStyle(
+              style: TextStyle(
                 fontSize: 24.0,
                 fontWeight: FontWeight.bold,
               ),
@@ -67,18 +71,24 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
               },
             ),
             const Gap(10),
-             Text(
+            const Text(
               'Tema Escuro',
-              style:  widget.builderOptions.textStyle,
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const Gap(10),
             Switch(
               activeColor: Colors.white,
               activeTrackColor: Colors.indigo,
               inactiveThumbColor: Colors.amber,
-              value: Theme.of(context).brightness == Brightness.dark,
+              value: tema??widget.themeMode,
               onChanged: (value) {
-                widget.onToggleTheme(value);
+                setState(() {
+                  widget.onToggleTheme(value);
+                  tema = value;
+                });
               },
             ),
           ],
@@ -88,14 +98,22 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
   }
 }
 
-void showCustomModalBottomSheet(BuildContext context, Function(bool) onToggleTheme, Function(double) changeFontSize, CustomBuilderOptions builderOptions, Function() changeFontFamily) {
+void showCustomModalBottomSheet(
+    BuildContext context,
+    Function(bool) onToggleTheme,
+    Function(double) changeFontSize,
+    CustomBuilderOptions builderOptions,
+    Function() changeFontFamily,
+    bool themeMode) {
   showModalBottomSheet(
     context: context,
     builder: (BuildContext context) {
       return BottomSheetContent(
         onToggleTheme: onToggleTheme,
         changeFontSize: changeFontSize,
-        builderOptions: builderOptions, changeFontFamily: changeFontFamily,
+        builderOptions: builderOptions,
+        changeFontFamily: changeFontFamily,
+        themeMode: themeMode,
       );
     },
   );
@@ -105,7 +123,8 @@ class FontSizeAdjuster extends StatefulWidget {
   final Function(double) changeFontSize;
   final double initialFontSize;
 
-  FontSizeAdjuster({required this.changeFontSize, required this.initialFontSize});
+  FontSizeAdjuster(
+      {required this.changeFontSize, required this.initialFontSize});
 
   @override
   _FontSizeAdjusterState createState() => _FontSizeAdjusterState();
