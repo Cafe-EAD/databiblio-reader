@@ -1,29 +1,27 @@
 // ignore_for_file: avoid_print
 import 'dart:convert';
 
+import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:epub_view/epub_view.dart';
+import 'package:epub_view/src/data/models/chapter_view_value.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:epub_view_example/widget/quiz_modal.dart';
-import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
+import 'package:epub_view_example/widget/quiz_modal.dart';
+import 'package:fl_toast/fl_toast.dart';
 import 'package:flutter/foundation.dart';
-import 'package:anim_search_bar/anim_search_bar.dart';
-
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
-
-import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 void main() => runApp(const MyApp());
 
@@ -63,8 +61,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Brightness get platformBrightness =>
-      MediaQueryData.fromView(WidgetsBinding.instance.window)
-          .platformBrightness;
+      MediaQueryData.fromView(WidgetsBinding.instance.window).platformBrightness;
 
   void _setSystemUIOverlayStyle() {
     if (platformBrightness == Brightness.light) {
@@ -111,7 +108,7 @@ _getMenu(widget) {
         builder: (context) {
           return ToastProvider(
             child: MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+              data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.0)),
               child: widget!,
             ),
           );
@@ -123,14 +120,13 @@ _getMenu(widget) {
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onToggleTheme;
-  MyHomePage({super.key, required this.onToggleTheme});
+  const MyHomePage({super.key, required this.onToggleTheme});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
   late SearchMatch searchMatch;
   TextEditingController textController = TextEditingController();
@@ -164,12 +160,7 @@ class _MyHomePageState extends State<MyHomePage>
         id: 1,
         chapterNumber: 2,
         text: 'Pergunta número 01?',
-        options: [
-          'Resposta letra A',
-          'Resposta letra B',
-          'Resposta letra C',
-          'Resposta letra D'
-        ],
+        options: ['Resposta letra A', 'Resposta letra B', 'Resposta letra C', 'Resposta letra D'],
         correctAnswerIndex: 2,
         questionType: 'Múltipla Escolha',
       ),
@@ -217,9 +208,7 @@ class _MyHomePageState extends State<MyHomePage>
 
     _epubReaderController = EpubController(
       document: EpubDocument.openAsset(
-        kDebugMode
-            ? 'assets/burroughs-mucker.epub'
-            : '$contextId/$revision/$bookName',
+        kDebugMode ? 'assets/burroughs-mucker.epub' : '$contextId/$revision/$bookName',
       ),
     );
 
@@ -244,8 +233,7 @@ class _MyHomePageState extends State<MyHomePage>
           })
         });
 
-    getBookmarks(userId, bookId)
-        .then((value) => bookmarks = value as List<BookmarkModel>);
+    getBookmarks(userId, bookId).then((value) => bookmarks = value as List<BookmarkModel>);
 
     super.initState();
     _initTts();
@@ -394,6 +382,7 @@ class _MyHomePageState extends State<MyHomePage>
                   _changeFontFamily,
                   _themeMode==ThemeMode.dark,
                   ),
+
             ),
             AnimSearchBar(
               width: 300,
@@ -412,11 +401,9 @@ class _MyHomePageState extends State<MyHomePage>
               onPressed: () {
                 if (_epubReaderController.selectedText != null &&
                     _epubReaderController.generateEpubCfi() != null &&
-                    _epubReaderController.currentValueListenable.value !=
-                        null) {
+                    _epubReaderController.currentValueListenable.value != null) {
                   HighlightModel(
-                          value: _epubReaderController
-                              .currentValueListenable.value,
+                          value: _epubReaderController.currentValueListenable.value,
                           selectedText: _epubReaderController.selectedText,
                           cfi: _epubReaderController.generateEpubCfi())
                       .printar();
@@ -430,11 +417,9 @@ class _MyHomePageState extends State<MyHomePage>
         ),
         body: _showQuiz
             ? QuizModal(
-                question: _questionsByChapter[_currentChapter]![
-                    _currentQuestionIndex],
+                question: _questionsByChapter[_currentChapter]![_currentQuestionIndex],
                 onCorrectAnswer: () {
-                  _onCorrectAnswer(_questionsByChapter[_currentChapter]![
-                      _currentQuestionIndex]);
+                  _onCorrectAnswer(_questionsByChapter[_currentChapter]![_currentQuestionIndex]);
                 },
               )
             : EpubView(
@@ -443,14 +428,14 @@ class _MyHomePageState extends State<MyHomePage>
                   _currentChapter = value?.chapterNumber ?? 0;
                   // Verifica se o capítulo mudou e se há perguntas não respondidas no novo capítulo
                   if (_currentChapter != 0 &&
-                      !_hasAnsweredQuestion(
-                          _questionsByChapter[_currentChapter]!.first.id)) {
+                      !_hasAnsweredQuestion(_questionsByChapter[_currentChapter]!.first.id)) {
                     setState(() {
                       _currentChapterValue = value;
                       _showQuiz = true;
                       _currentQuestionIndex = 0;
                     });
                   }
+                  _epubReaderController.updateCurrentPage();
                 },
                 builders: EpubViewBuilders(
                   options: _builderOptions,
@@ -458,22 +443,19 @@ class _MyHomePageState extends State<MyHomePage>
                 ),
                 controller: _epubReaderController,
               ),
-        bottomSheet:
-            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+        bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
 
   void _onCorrectAnswer(Question question) {
     _saveAnswer(question.id);
     setState(() {
-      if (_currentQuestionIndex <
-          _questionsByChapter[_currentChapter]!.length - 1) {
+      if (_currentQuestionIndex < _questionsByChapter[_currentChapter]!.length - 1) {
         _currentQuestionIndex++;
       } else {
         _showQuiz = false;
         _currentQuestionIndex = 0;
         // Obter startIndex usando o nome do capítulo
-        final startIndex =
-            _chapterStartIndices[_currentChapterValue?.chapter?.Title];
+        final startIndex = _chapterStartIndices[_currentChapterValue?.chapter?.Title];
         if (startIndex != null) {
           _epubReaderController.jumpTo(index: startIndex, alignment: 0);
         }
@@ -543,8 +525,7 @@ class _MyHomePageState extends State<MyHomePage>
             decoration: InputDecoration(
               hintText: 'Pesquisar',
               filled: true,
-              fillColor:
-                  Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
+              fillColor: Theme.of(context).colorScheme.onBackground.withOpacity(0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
                 borderSide: BorderSide.none,
@@ -580,14 +561,12 @@ class _MyHomePageState extends State<MyHomePage>
 
   _getInfoBookMark() async {
     try {
-      final response = await getBookmarks(
-          userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+      final response = await getBookmarks(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
 
       if (response.statusCode == 200) {
         final List<dynamic> responseData = jsonDecode(response.body);
-        List<BookmarkModel> bookmarks = responseData
-            .map((bookmark) => BookmarkModel.fromJson(bookmark))
-            .toList();
+        List<BookmarkModel> bookmarks =
+            responseData.map((bookmark) => BookmarkModel.fromJson(bookmark)).toList();
         setState(() {
           bookmarksinfo = bookmarks;
         });
