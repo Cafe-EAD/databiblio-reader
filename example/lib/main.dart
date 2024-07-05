@@ -35,9 +35,9 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 }
+  ThemeMode _themeMode = ThemeMode.system;
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  ThemeMode _themeMode = ThemeMode.system;
 
   void _toggleTheme(bool isDark) {
     setState(() {
@@ -382,7 +382,7 @@ class _MyHomePageState extends State<MyHomePage>
             ),
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed: () => _changeFontFamily(),
+              onPressed: () => print(_themeMode==ThemeMode.dark),
             ),
             IconButton(
               icon: const Icon(Icons.format_size),
@@ -391,7 +391,9 @@ class _MyHomePageState extends State<MyHomePage>
                   widget.onToggleTheme,
                   _changeFontSize,
                   _builderOptions,
-                  _changeFontFamily),
+                  _changeFontFamily,
+                  _themeMode==ThemeMode.dark,
+                  ),
             ),
             AnimSearchBar(
               width: 300,

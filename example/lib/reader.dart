@@ -261,7 +261,8 @@ class _ReaderScreenState extends State<ReaderScreen>
                   widget.onToggleTheme,
                   _changeFontSize,
                   _builderOptions,
-                  _changeFontFamily),
+                  _changeFontFamily,
+                  ThemeMode.system==ThemeMode.dark),
             ),
             AnimSearchBar(
               width: 300,
