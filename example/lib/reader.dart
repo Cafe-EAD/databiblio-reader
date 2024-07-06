@@ -62,10 +62,11 @@ class _ReaderScreenState extends State<ReaderScreen>
   late TabController _tabController;
   List<BookmarkModel> bookmarks = [];
   List<BookmarkModel> bookmarksinfo = [];
+  List<HighlightModel> highlightsinfo = [];
   final TextEditingController _searchController = TextEditingController();
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
   bool _isBookmarkMarked = false;
-
+  bool _showSearchField = false;
   EpubChapterViewValue? _currentChapterValue;
 
   // Mocado question
@@ -120,7 +121,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     _initPrefs();
     if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
-   
+
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
@@ -132,7 +133,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     //   ),
     // );
 
-        _epubReaderController = EpubController(
+    _epubReaderController = EpubController(
       document: widget.book,
     );
 
@@ -214,8 +215,6 @@ class _ReaderScreenState extends State<ReaderScreen>
     _flutterTts.setPitch(pitch);
   }
 
-  
-
   @override
   void dispose() {
     _epubReaderController.dispose();
@@ -237,6 +236,17 @@ class _ReaderScreenState extends State<ReaderScreen>
           ),
           actions: <Widget>[
             IconButton(
+              icon: const Icon(Icons.bookmark),
+              color: Theme.of(context).colorScheme.onBackground,
+              onPressed: () async {
+                await _getInfoPopular();
+                setState(() {
+                  _showSearchField = !_showSearchField;
+                  _bottomSheetState = 1;
+                });
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.save_alt),
               onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
             ),
@@ -256,7 +266,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                   _changeFontSize,
                   _builderOptions,
                   _changeFontFamily,
-                  ThemeMode.system==ThemeMode.dark),
+                  ThemeMode.system == ThemeMode.dark),
             ),
             AnimSearchBar(
               width: 300,
@@ -321,7 +331,39 @@ class _ReaderScreenState extends State<ReaderScreen>
                 ),
                 controller: _epubReaderController,
               ),
+        bottomSheet:
+            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
+
+  Widget _getShowContainer() {
+    switch (_bottomSheetState) {
+      case 1:
+        return BookmarkBottomSheet(
+          isBookmarkMarked: _isBookmarkMarked,
+          onBookmarkToggle: () {
+            setState(() {
+              _isBookmarkMarked = !_isBookmarkMarked;
+            });
+          },
+          onClose: () {
+            setState(() {
+              _showSearchField = !_showSearchField;
+              _bottomSheetState = 0;
+            });
+          },
+          tabController: _tabController,
+          bookmarksinfo: bookmarksinfo,
+          highlightsinfo: highlightsinfo,
+          chapterValue: _currentChapterValue,
+          epubReaderController: _epubReaderController,
+          onBookmarkAdded: _updateBookmarks,
+          bookId: bookId,
+          userId: userId,
+        );
+      default:
+        return Container();
+    }
+  }
 
   void _onCorrectAnswer(Question question) {
     _saveAnswer(question.id);
@@ -358,32 +400,19 @@ class _ReaderScreenState extends State<ReaderScreen>
     return answeredQuestions.contains(questionId.toString());
   }
 
-
-
-
-  _getInfoBookMark() async {
-    try {
-      final response = await getBookmarks(
-          userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseData = jsonDecode(response.body);
-        List<BookmarkModel> bookmarks = responseData
-            .map((bookmark) => BookmarkModel.fromJson(bookmark))
-            .toList();
-        setState(() {
-          bookmarksinfo = bookmarks;
-        });
-      } else {
-        print("Erro na requisição: ${response.statusCode}");
-      }
-    } catch (e) {
-      print("Erro ao obter bookmarks: $e");
-    }
+  _getInfoPopular() async {
+    final bookmarks =
+        await getBookmarks(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+    final highlights =
+        await getHighlights(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+    setState(() {
+      bookmarksinfo = bookmarks;
+      highlightsinfo = highlights;
+    });
   }
 
   void _updateBookmarks() {
-    _getInfoBookMark();
+    _getInfoPopular();
   }
 
   /*
@@ -416,7 +445,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     });
   }
 
-Future<void> _speak(String text) async {
+  Future<void> _speak(String text) async {
     if (text.isNotEmpty) {
       await _flutterTts.speak(text);
     }

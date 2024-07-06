@@ -2,6 +2,7 @@
 
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
+import 'package:epub_view_example/model/highlight_model.dart';
 import 'package:epub_view_example/network/rest.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
@@ -12,6 +13,7 @@ class BookmarkBottomSheet extends StatefulWidget {
   final Function() onClose;
   final TabController tabController;
   final List<BookmarkModel> bookmarksinfo;
+  final List<HighlightModel> highlightsinfo;
   final EpubChapterViewValue? chapterValue;
   final EpubController epubReaderController;
   final Function() onBookmarkAdded;
@@ -25,6 +27,7 @@ class BookmarkBottomSheet extends StatefulWidget {
     required this.onClose,
     required this.tabController,
     required this.bookmarksinfo,
+    required this.highlightsinfo,
     required this.chapterValue,
     required this.epubReaderController,
     required this.onBookmarkAdded,
@@ -314,7 +317,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                 ),
                 SingleChildScrollView(
                   child: ListView.builder(
-                    itemCount: bookmarkFake.length,
+                    // itemCount: widget.highlightsinfo.length,
+                    itemCount: 1,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
@@ -332,7 +336,8 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${bookmarkFake[index]["local"]}',
+                              // '${widget.highlightsinfo[index].chapter}',
+                              's',
                               style: TextStyle(
                                 fontSize: 14,
                                 color:
@@ -341,7 +346,9 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${bookmarkFake[index]["conteudo"]}',
+                              's',
+
+                              // '${widget.highlightsinfo[index].chapter}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
