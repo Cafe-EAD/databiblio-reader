@@ -1,12 +1,12 @@
 {
   "cSpell.words": ["Epub", "epubcfi", "epubx", "prepend", "rxdart"],
   "dart.flutterSdkPath": ".fvm/versions/3.19.4",
-  // "workbench.colorCustomizations": {
-  //   "activityBar.background": "#1b5140",
-  //   "titleBar.activeBackground": "#1b5140",
-  //   "titleBar.activeForeground": "#e9e9e9",
-  //   "editorLineNumber.foreground": "#00ff00",
-  //   "editor.selectionBackground": "#190457",
-  //   "editor.foreground": "#e9e9e9"
-  // }
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#1b5140",
+    "titleBar.activeBackground": "#1b5140",
+    "titleBar.activeForeground": "#e9e9e9",
+    "editorLineNumber.foreground": "#00ff00",
+    "editor.selectionBackground": "#190457",
+    "editor.foreground": "#e9e9e9"
+  }
 }
