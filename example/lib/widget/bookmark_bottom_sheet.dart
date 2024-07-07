@@ -484,8 +484,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
             TextButton(
               onPressed: () async {
                 try {
-                  var teste = await deleteHighlight(highlighId!);
-                  print(teste);
+                  await deleteHighlight(highlighId!);
                   Navigator.pop(context);
                   widget.onBookmarkAdded();
                 } catch (e) {
@@ -519,8 +518,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
             TextButton(
               onPressed: () async {
                 try {
-                  var teste = await deleteHighlight(highlighId!);
-                  print(teste);
+                  await deleteHighlight(highlighId!);
                   widget.onBookmarkAdded();
                   Navigator.pop(context, true);
                 } catch (e) {
