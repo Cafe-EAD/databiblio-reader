@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import '../utils/model_keys.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
@@ -5,6 +7,7 @@ class HighlightModel {
   EpubChapterViewValue? value;
   String? selectedText;
   String? cfi;
+  String? highlighted_text;
   int? highlightid;
   String? chapter;
   String? paragraph;
@@ -16,6 +19,7 @@ class HighlightModel {
     this.selectedText,
     this.cfi,
     this.highlightid,
+    this.highlighted_text,
     this.chapter,
     this.paragraph,
     this.startindex,
@@ -28,6 +32,7 @@ class HighlightModel {
       selectedText: json[HighlightKeys.selectedText],
       cfi: json[HighlightKeys.cfi],
       highlightid: json['highlightid'],
+      highlighted_text: json['highlighted_text'],
       chapter: json['chapter'],
       paragraph: json['paragraph'],
       startindex: json['startindex'],

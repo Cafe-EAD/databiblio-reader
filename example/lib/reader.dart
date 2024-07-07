@@ -158,8 +158,7 @@ class _ReaderScreenState extends State<ReaderScreen>
           })
         });
 
-    getBookmarks(userId, bookId)
-        .then((value) => bookmarks = value as List<BookmarkModel>);
+    getBookmarks(userId, bookId).then((value) => bookmarks = value);
 
     super.initState();
     _initTts();
@@ -359,6 +358,7 @@ class _ReaderScreenState extends State<ReaderScreen>
           onBookmarkAdded: _updateBookmarks,
           bookId: bookId,
           userId: userId,
+          chapterStartIndices: _chapterStartIndices,
         );
       default:
         return Container();

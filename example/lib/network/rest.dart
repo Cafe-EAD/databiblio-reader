@@ -75,27 +75,38 @@ Future<dynamic> postHighlight(
   }
 }
 
-Future<dynamic> deleteHighlight(int highlightId) async {
-  try {
-    String wsfunction = 'local_wsgetbooks_delete_highlights';
-    Uri url = Uri.parse(baseUrl).replace(queryParameters: {
-      'wstoken': WSTOKEN,
-      'wsfunction': wsfunction,
-      'highlightid': highlightId.toString(),
-      'moodlewsrestformat': 'json',
-    });
-
-    final response = await http.delete(url);
-
-    if (response.statusCode == 200) {
-      return response.body;
-    } else {
-      throw Exception('Error deleting highlight: ${response.statusCode}');
-    }
-  } catch (e) {
-    throw Exception('Error: $e');
-  }
+// Future<GenericPostResponse> postLocatorData(Map request) async {
+//   return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
+//       '$baseUrl?wsfunction=local_wsgetbooks_post_locator&params=${jsonEncode(request)}',
+//       request: request,
+//       method: HttpMethod.POST))));
+// }
+Future<GenericPostResponse> deleteHighlight(int highlightId) async {
+  // Future<dynamic> deleteHighlight(int highlightId) async {
+  return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=local_wsgetbooks_delete_highlights&highlightid=$highlightId',
+      method: HttpMethod.DELETE))));
 }
+//   try {
+//     String wsfunction = 'local_wsgetbooks_delete_highlights';
+//     Uri url = Uri.parse(baseUrl).replace(queryParameters: {
+//       'wstoken': WSTOKEN,
+//       'wsfunction': wsfunction,
+//       'highlightid': highlightId.toString(),
+//       'moodlewsrestformat': 'json',
+//     });
+
+//     final response = await http.delete(url);
+
+//     if (response.statusCode == 200) {
+//       return response.body;
+//     } else {
+//       throw Exception('Error deleting highlight: ${response.statusCode}');
+//     }
+//   } catch (e) {
+//     throw Exception('Error: $e');
+//   }
+// }
 
 Future<List<BookmarkModel>> getBookmarks(int userId, int bookId) async {
   String wsfunction = 'local_wsgetbooks_get_bookmarks';
