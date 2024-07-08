@@ -1,6 +1,7 @@
 part of 'ui/epub_view.dart';
 
 const int charactersPerPage = 1024;
+const int pageNumberVisibilityDuration = 2000; // in milliseconds
 
 class EpubController {
   EpubController({
@@ -16,7 +17,8 @@ class EpubController {
   EpubBook? _document;
   String? selectedText;
 
-  int currentPage = 1;
+  final isPageNumberVisible = ValueNotifier<bool>(false);
+  final currentPage = ValueNotifier<int>(1);
 
   EpubChapterViewValue? get currentValue => _epubViewState?._currentValue;
 
@@ -174,8 +176,11 @@ class EpubController {
       );
       if (paragraphIndex != null) {
         final totalCharacters = paragraphIndex * charactersPerPage;
-        currentPage = (totalCharacters / charactersPerPage).ceil();
-        debugPrint('>>> Current Page: $currentPage');
+        final newPage = (totalCharacters / charactersPerPage).ceil();
+        if (newPage != currentPage.value) {
+          currentPage.value = newPage;
+          debugPrint('>>> Current Page: ${currentPage.value}');
+        }
       }
     }
   }
