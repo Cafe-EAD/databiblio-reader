@@ -178,21 +178,6 @@ class _EpubViewState extends State<EpubView> {
 
   void _onTextToSpeech() {}
 
-  void _onHighlight() {
-    print(_controller.selectedText);
-    print(_controller.currentValueListenable.value);
-
-    if (_controller.selectedText != null &&
-        _controller.generateEpubCfi() != null &&
-        _controller.currentValueListenable.value != null) {
-      HighlightModel(
-              value: _controller.currentValueListenable.value,
-              selectedText: _controller.selectedText,
-              cfi: _controller.generateEpubCfi())
-          .printar();
-    }
-  }
-
   void _onSelectionChanged(String? selection) {
     _selectedText = selection ?? '';
     _controller.selectedText = selection;
@@ -387,7 +372,8 @@ class _EpubViewState extends State<EpubView> {
                   builders,
                   paragraphs,
                   document,
-                  onHighlight);
+                  onHighlight,
+                  _selectedText);
             }
           },
           child: SelectionArea(
@@ -461,17 +447,32 @@ class _EpubViewState extends State<EpubView> {
     );
   }
 
+  void _onHighlight() {
+    print(_selectedText);
+    if (_controller.selectedText != null &&
+        _controller.generateEpubCfi() != null &&
+        _controller.currentValueListenable.value != null) {
+      HighlightModel(
+              value: _controller.currentValueListenable.value,
+              selectedText: _controller.selectedText,
+              cfi: _controller.generateEpubCfi())
+          .printar();
+    }
+  }
+
   static void _showContextMenu(
-      BuildContext context,
-      Offset position,
-      OnSelectedChanged onSelectedChanged,
-      paragraphIndex,
-      chapterIndex,
-      index,
-      builders,
-      paragraphs,
-      document,
-      onHighlight) {
+    BuildContext context,
+    Offset position,
+    OnSelectedChanged onSelectedChanged,
+    paragraphIndex,
+    chapterIndex,
+    index,
+    builders,
+    paragraphs,
+    document,
+    onHighlight,
+    _selectedText,
+  ) {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -489,23 +490,14 @@ class _EpubViewState extends State<EpubView> {
           child: const Text('Marcar Texto 1'),
           onTap: () {
             onHighlight();
-            print('teste');
+            // print('teste');
+            print(_selectedText);
             // print(paragraphIndex);
             // print(chapterIndex);
             // print(index);
             // print(builders);
             // print(paragraphs.toString());
             // print(document);
-
-            // if (_controller.selectedText != null &&
-            //     _controller.generateEpubCfi() != null &&
-            //     _controller.currentValueListenable.value != null) {
-            //   HighlightModel(
-            //           value: _controller.currentValueListenable.value,
-            //           selectedText: _controller.selectedText,
-            //           cfi: _controller.generateEpubCfi())
-            //       .printar();
-            // }
           },
         ),
         PopupMenuItem(

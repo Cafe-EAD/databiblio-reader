@@ -28,6 +28,10 @@ class EpubController {
 
   final tableOfContentsListenable = ValueNotifier<List<EpubViewChapter>>([]);
 
+  List<Paragraph> getAllParagraphs() {
+    return _epubViewState?._paragraphs ?? [];
+  }
+
   void jumpTo({required int index, double alignment = 0}) async {
     int passCount = 0;
 
@@ -84,7 +88,8 @@ class EpubController {
         chapter: _epubViewState?._currentValue?.chapter,
         paragraphIndex: _epubViewState?._getAbsParagraphIndexBy(
           positionIndex: _epubViewState?._currentValue?.position.index ?? 0,
-          trailingEdge: _epubViewState?._currentValue?.position.itemTrailingEdge,
+          trailingEdge:
+              _epubViewState?._currentValue?.position.itemTrailingEdge,
           leadingEdge: _epubViewState?._currentValue?.position.itemLeadingEdge,
         ),
       );
@@ -100,14 +105,16 @@ class EpubController {
 
     int index = -1;
 
-    return _cacheTableOfContents = _document!.Chapters!.fold<List<EpubViewChapter>>(
+    return _cacheTableOfContents =
+        _document!.Chapters!.fold<List<EpubViewChapter>>(
       [],
       (acc, next) {
         index += 1;
         acc.add(EpubViewChapter(next.Title, _getChapterStartIndex(index)));
         for (final subChapter in next.SubChapters!) {
           index += 1;
-          acc.add(EpubViewSubChapter(subChapter.Title, _getChapterStartIndex(index)));
+          acc.add(EpubViewSubChapter(
+              subChapter.Title, _getChapterStartIndex(index)));
         }
         return acc;
       },
@@ -135,14 +142,17 @@ class EpubController {
       tableOfContentsListenable.value = tableOfContents();
       loadingState.value = EpubViewLoadingState.success;
     } catch (error) {
-      _epubViewState!._loadingError =
-          error is Exception ? error : Exception('An unexpected error occurred');
+      _epubViewState!._loadingError = error is Exception
+          ? error
+          : Exception('An unexpected error occurred');
       loadingState.value = EpubViewLoadingState.error;
     }
   }
 
   int _getChapterStartIndex(int index) =>
-      index < _epubViewState!._chapterIndexes.length ? _epubViewState!._chapterIndexes[index] : 0;
+      index < _epubViewState!._chapterIndexes.length
+          ? _epubViewState!._chapterIndexes[index]
+          : 0;
 
   void _attach(_EpubViewState epubReaderViewState) {
     _epubViewState = epubReaderViewState;

@@ -296,22 +296,20 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
-                      int? chapterAsInt =
-                          int.tryParse(widget.highlightsinfo[index].chapter!);
-                      String? chapter = _obterTituloDoCapitulo(chapterAsInt!);
+                      int? startindexInt = int.tryParse(
+                          widget.highlightsinfo[index].startindex!);
+                      String? chapter = _obterTituloDoCapitulo(startindexInt!);
 
                       return Dismissible(
-                        key: Key(widget.highlightsinfo[index].highlighted_text
-                            .toString()),
-                        // confirmDismiss: (direction) {
-                        //   _showDeleteHighlightDialog(context,
-                        //       widget.highlightsinfo[index].highlightid);
-                        // },
+                        key: Key(
+                          widget.highlightsinfo[index].highlighted_text
+                              .toString(),
+                        ),
                         confirmDismiss: (direction) async {
                           return await _showConfirmationDialog(
-                              context,
-                              widget.highlightsinfo[index]
-                                  .highlightid); // Chama uma função personalizada
+                            context,
+                            widget.highlightsinfo[index].highlightid,
+                          );
                         },
                         direction: DismissDirection.endToStart,
                         background: Container(

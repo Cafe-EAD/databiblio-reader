@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/common.dart';
 import 'package:epub_view_example/model/highlight_model.dart';
-import 'package:epub_view_example/utils/constants.dart';
-import 'package:http/http.dart' as http;
 import '../model/locator.dart';
 import 'network_utils.dart';
 
@@ -12,68 +10,25 @@ const baseUrl =
     'https://databiblion.cafeeadhost.com.br/webservice/rest/server.php';
 
 Future<List<HighlightModel>> getHighlights(int userId, int bookId) async {
-  // List<dynamic> response = await (handleResponse(await buildHttpResponse(
-  //     '$baseUrl?wsfunction=local_wsgetbooks_get_highlights&userid=$userId&bookid=$bookId',
-  //     method: HttpMethod.GET)));
-  // List<BookmarkModel> result = List<BookmarkModel>.from(
-  //     response.map((model) => BookmarkModel.fromJson(model)));
-  // return result;
-
-  String wsfunction = 'local_wsgetbooks_get_highlights';
-  Uri url = Uri.parse(baseUrl).replace(queryParameters: {
-    'wstoken': WSTOKEN,
-    'wsfunction': wsfunction,
-    // 'bookid': bookId.toString(),
-    // 'userid': userId.toString(),
-    'bookid': '4',
-    'userid': '2',
-    'moodlewsrestformat': 'json'
-  });
-
-  final response = await http.get(url);
-
-  final List<dynamic> responseData = jsonDecode(response.body);
-  List<HighlightModel> result = responseData
-      .map((highlight) => HighlightModel.fromJson(highlight))
-      .toList();
+  List<dynamic> response = await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=local_wsgetbooks_get_highlights&userid=$userId&bookid=$bookId',
+      method: HttpMethod.GET)));
+  List<HighlightModel> result = List<HighlightModel>.from(
+      response.map((model) => HighlightModel.fromJson(model)));
   return result;
 }
 
-// <GenericPostResponse>
-Future<dynamic> postHighlight(
-  int userId,
-  int bookId, {
-  required String chapter,
-  required String paragraph,
-  required String startindex,
-  required String selectionlength,
-}) async {
-  try {
-    String wsfunction = 'local_wsgetbooks_post_highlights';
-    Uri url = Uri.parse(baseUrl).replace(queryParameters: {
-      'wstoken': WSTOKEN,
-      'wsfunction': wsfunction,
-      // 'bookid': bookId.toString(),
-      // 'userid': userId.toString(),
-      'bookid': '4',
-      'userid': '2',
-      'moodlewsrestformat': 'json',
-      'chapter': chapter,
-      'paragraph': paragraph,
-      'startindex': startindex,
-      'selectionlength': selectionlength,
-    });
-
-    final response = await http.post(url);
-
-    if (response.statusCode == 200) {
-      return response.body;
-    } else {
-      throw Exception('Error creating highlight: ${response.statusCode}');
-    }
-  } catch (e) {
-    throw Exception('Error: $e');
-  }
+Future<GenericPostResponse> postHighlight(
+    int userId,
+    int bookId,
+    String chapter,
+    String paragraph,
+    String startindex,
+    String selectionlength,
+    String highlightedText) async {
+  return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=local_wsgetbooks_post_highlights&bookid=$bookId&userid=$userId&chapter=$chapter&paragraph=$paragraph&startindex=$startindex&selectionlength=$selectionlength&highlighted_text=$highlightedText',
+      method: HttpMethod.POST))));
 }
 
 Future<GenericPostResponse> deleteHighlight(int highlightId) async {
