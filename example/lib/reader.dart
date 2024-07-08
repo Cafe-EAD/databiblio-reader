@@ -281,14 +281,21 @@ class _ReaderScreenState extends State<ReaderScreen>
               icon: const Icon(Icons.assistant_rounded),
               onPressed: () {
                 allParagraphs = _epubReaderController.getAllParagraphs();
-                // Encontre o parágrafo correspondente ao texto selecionado
+
                 if (_epubReaderController.selectedText != null) {
                   print(_epubReaderController.selectedText);
                   // Encontre o parágrafo correspondente ao texto selecionado
                   final selectedParagraph = allParagraphs.firstWhereOrNull(
-                    (paragraph) => paragraph.element.text.contains(
-                      _epubReaderController.selectedText!,
-                    ),
+                    (paragraph) {
+                      String paragraphText =
+                          paragraph.element.text.replaceAll('\n', ' ');
+                      if (paragraphText
+                          .contains(_epubReaderController.selectedText!)) {
+                        return true;
+                      } else {
+                        return false;
+                      }
+                    },
                   );
 
                   if (selectedParagraph != null) {
