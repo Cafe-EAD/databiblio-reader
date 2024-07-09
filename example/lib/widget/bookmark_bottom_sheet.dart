@@ -2,7 +2,6 @@
 
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
-import 'package:epub_view_example/model/highlight_model.dart';
 import 'package:epub_view_example/network/rest.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
@@ -13,13 +12,11 @@ class BookmarkBottomSheet extends StatefulWidget {
   final Function() onClose;
   final TabController tabController;
   final List<BookmarkModel> bookmarksinfo;
-  final List<HighlightModel> highlightsinfo;
   final EpubChapterViewValue? chapterValue;
   final EpubController epubReaderController;
   final Function() onBookmarkAdded;
   final int bookId;
   final int userId;
-  final Map<String, int> chapterStartIndices;
 
   const BookmarkBottomSheet({
     Key? key,
@@ -28,13 +25,11 @@ class BookmarkBottomSheet extends StatefulWidget {
     required this.onClose,
     required this.tabController,
     required this.bookmarksinfo,
-    required this.highlightsinfo,
     required this.chapterValue,
     required this.epubReaderController,
     required this.onBookmarkAdded,
     required this.bookId,
     required this.userId,
-    required this.chapterStartIndices,
   }) : super(key: key);
 
   @override
@@ -42,6 +37,33 @@ class BookmarkBottomSheet extends StatefulWidget {
 }
 
 class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
+  final List<Map<String, dynamic>> bookmarkFake = [
+    {
+      "local": "Chapter I. - Parágrafo 1",
+      "conteudo":
+          "BILLY BYRNE was a product of the streets and alleys of Chicago's great West Side. From Halsted to Robey, and from Grand Avenue to Lake Street there was scarce a bartender whom Billy knew not by his first name. And, in proportion to their number which was considerably less, he knew the patrolmen and plain clothes men equally as well, but not so pleasantly.",
+    },
+    {
+      "local": "Chapter II. - Parágrafo 1",
+      "conteudo":
+          "WHEN Billy opened his eyes again he could not recall, for the instant, very much of his recent past. At last he remembered with painful regret the drunken sailor it had been his intention to roll. He felt deeply chagrined that his rightful prey should have escaped him. He couldn't understand how it had happened.",
+    },
+    {
+      "local": "Chapter II. - Parágrafo 3",
+      "conteudo":
+          "His head ached frightfully and he was very sick. So sick that the room in which he lay seemed to be rising and falling in a horribly realistic manner. Every time it dropped it brought Billy's stomach nearly to his mouth.",
+    },
+    {
+      "local": "Chapter IV. - Parágrafo 4",
+      "conteudo":
+          "Ward was pleased that he had not been forced to prolong the galling masquerade of valet to his inferior officer. He was hopeful, too,",
+    },
+    {
+      "local": "Chapter V. - Parágrafo 14",
+      "conteudo":
+          "The girl made no comment, but Divine saw the contempt in her face.",
+    },
+  ];
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -292,77 +314,40 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                 ),
                 SingleChildScrollView(
                   child: ListView.builder(
-                    itemCount: widget.highlightsinfo.length,
+                    itemCount: bookmarkFake.length,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
-                      int? startindexInt = int.tryParse(
-                          widget.highlightsinfo[index].startindex!);
-                      String? chapter = _obterTituloDoCapitulo(startindexInt!);
-
-                      return Dismissible(
-                        key: Key(
-                          widget.highlightsinfo[index].highlighted_text
-                              .toString(),
-                        ),
-                        confirmDismiss: (direction) async {
-                          return await _showConfirmationDialog(
-                            context,
-                            widget.highlightsinfo[index].highlightid,
-                          );
-                        },
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 16.0),
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(16.0),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Colors.grey[300]!,
-                                width: 1,
-                              ),
+                      return Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Colors.grey[300]!,
+                              width: 1,
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${widget.highlightsinfo[index].highlighted_text}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '$chapter - Parágrafo:  ${widget.highlightsinfo[index].paragraph}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${bookmarkFake[index]["local"]}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  _showDeleteHighlightDialog(context,
-                                      widget.highlightsinfo[index].highlightid);
-                                },
-                                child:
-                                    const Icon(Icons.delete, color: Colors.red),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${bookmarkFake[index]["conteudo"]}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },
@@ -374,15 +359,6 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
         ],
       ),
     );
-  }
-
-  String? _obterTituloDoCapitulo(int startIndex) {
-    for (final entry in widget.chapterStartIndices.entries) {
-      if (entry.value == startIndex) {
-        return entry.key.toString();
-      }
-    }
-    return "Não foi possivel encontrar";
   }
 
   void _showNoteDialog(BuildContext context, BookmarkModel bookmark) async {
@@ -456,73 +432,6 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                 } catch (e) {
                   Navigator.pop(context);
                   print('Erro ao apagar nota: ${e.toString()}');
-                }
-              },
-              child: const Text('Apagar', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showDeleteHighlightDialog(BuildContext context, int? highlighId) async {
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Apagar Highlight'),
-          content: const Text('Tem certeza que deseja apagar esta Highlight?'),
-          backgroundColor: Theme.of(context).colorScheme.background,
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  await deleteHighlight(highlighId!);
-                  Navigator.pop(context);
-                  widget.onBookmarkAdded();
-                } catch (e) {
-                  Navigator.pop(context);
-                  widget.onBookmarkAdded();
-                  print('Erro ao apagar highlight: ${e.toString()}');
-                }
-              },
-              child: const Text('Apagar', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<bool?> _showConfirmationDialog(
-      BuildContext context, int? highlighId) async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Apagar Highlight'),
-          content: const Text('Tem certeza que deseja apagar esta Highlight?'),
-          backgroundColor: Theme.of(context).colorScheme.background,
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  await deleteHighlight(highlighId!);
-                  widget.onBookmarkAdded();
-                  Navigator.pop(context, true);
-                } catch (e) {
-                  Navigator.pop(context);
-                  widget.onBookmarkAdded();
-                  print('Erro ao apagar highlight: ${e.toString()}');
                 }
               },
               child: const Text('Apagar', style: TextStyle(color: Colors.red)),

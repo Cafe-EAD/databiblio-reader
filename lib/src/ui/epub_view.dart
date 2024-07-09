@@ -5,7 +5,6 @@ import 'package:epub_view/src/data/epub_cfi_reader.dart';
 import 'package:epub_view/src/data/epub_parser.dart';
 import 'package:epub_view/src/data/models/chapter.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
-import 'package:epub_view/src/data/models/highlight_model.dart';
 import 'package:epub_view/src/data/models/paragraph.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +25,6 @@ const _minLeadingEdge = -0.05;
 typedef ExternalLinkPressed = void Function(String href);
 typedef OnSelectedChanged = void Function(String? selection);
 typedef OnTextToSpeech = void Function();
-typedef OnHighlight = void Function();
 int? index;
 
 class EpubView extends StatefulWidget {
@@ -177,21 +175,6 @@ class _EpubViewState extends State<EpubView> {
   }
 
   void _onTextToSpeech() {}
-
-  void _onHighlight() {
-    print(_controller.selectedText);
-    print(_controller.currentValueListenable.value);
-
-    if (_controller.selectedText != null &&
-        _controller.generateEpubCfi() != null &&
-        _controller.currentValueListenable.value != null) {
-      HighlightModel(
-              value: _controller.currentValueListenable.value,
-              selectedText: _controller.selectedText,
-              cfi: _controller.generateEpubCfi())
-          .printar();
-    }
-  }
 
   void _onSelectionChanged(String? selection) {
     _selectedText = selection ?? '';
@@ -351,19 +334,17 @@ class _EpubViewState extends State<EpubView> {
       );
 
   static Widget _chapterBuilder(
-    BuildContext context,
-    EpubViewBuilders builders,
-    EpubBook document,
-    List<EpubChapter> chapters,
-    List<Paragraph> paragraphs,
-    int index,
-    int chapterIndex,
-    int paragraphIndex,
-    ExternalLinkPressed onExternalLinkPressed,
-    OnSelectedChanged onSelectedChanged,
-    OnTextToSpeech onTextToSpeech,
-    OnHighlight onHighlight,
-  ) {
+      BuildContext context,
+      EpubViewBuilders builders,
+      EpubBook document,
+      List<EpubChapter> chapters,
+      List<Paragraph> paragraphs,
+      int index,
+      int chapterIndex,
+      int paragraphIndex,
+      ExternalLinkPressed onExternalLinkPressed,
+      OnSelectedChanged onSelectedChanged,
+      OnTextToSpeech onTextToSpeech) {
     if (paragraphs.isEmpty) {
       return Container();
     }
@@ -378,16 +359,7 @@ class _EpubViewState extends State<EpubView> {
           onSecondaryTapDown: (details) {
             if (_selectedText?.isNotEmpty ?? false) {
               _showContextMenu(
-                  context,
-                  details.globalPosition,
-                  onSelectedChanged,
-                  paragraphIndex,
-                  chapterIndex,
-                  index,
-                  builders,
-                  paragraphs,
-                  document,
-                  onHighlight);
+                  context, details.globalPosition, onSelectedChanged);
             }
           },
           child: SelectionArea(
@@ -396,9 +368,7 @@ class _EpubViewState extends State<EpubView> {
                 anchors: selectableTextState.contextMenuAnchors,
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      onHighlight();
-                    },
+                    onTap: () {},
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       color: Colors.black,
@@ -461,17 +431,8 @@ class _EpubViewState extends State<EpubView> {
     );
   }
 
-  static void _showContextMenu(
-      BuildContext context,
-      Offset position,
-      OnSelectedChanged onSelectedChanged,
-      paragraphIndex,
-      chapterIndex,
-      index,
-      builders,
-      paragraphs,
-      document,
-      onHighlight) {
+  static void _showContextMenu(BuildContext context, Offset position,
+      OnSelectedChanged onSelectedChanged) {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -486,27 +447,8 @@ class _EpubViewState extends State<EpubView> {
       items: [
         PopupMenuItem(
           value: 'Marcar Texto',
-          child: const Text('Marcar Texto 1'),
-          onTap: () {
-            onHighlight();
-            print('teste');
-            // print(paragraphIndex);
-            // print(chapterIndex);
-            // print(index);
-            // print(builders);
-            // print(paragraphs.toString());
-            // print(document);
-
-            // if (_controller.selectedText != null &&
-            //     _controller.generateEpubCfi() != null &&
-            //     _controller.currentValueListenable.value != null) {
-            //   HighlightModel(
-            //           value: _controller.currentValueListenable.value,
-            //           selectedText: _controller.selectedText,
-            //           cfi: _controller.generateEpubCfi())
-            //       .printar();
-            // }
-          },
+          child: const Text('Marcar Texto'),
+          onTap: () {},
         ),
         PopupMenuItem(
           value: 'Ouvir',
@@ -526,19 +468,17 @@ class _EpubViewState extends State<EpubView> {
       itemPositionsListener: _itemPositionListener,
       itemBuilder: (BuildContext context, int index) {
         return widget.builders.chapterBuilder(
-          context,
-          widget.builders,
-          widget.controller._document!,
-          _chapters,
-          _paragraphs,
-          index,
-          _getChapterIndexBy(positionIndex: index),
-          _getParagraphIndexBy(positionIndex: index),
-          _onLinkPressed,
-          _onSelectionChanged,
-          _onTextToSpeech,
-          _onHighlight,
-        );
+            context,
+            widget.builders,
+            widget.controller._document!,
+            _chapters,
+            _paragraphs,
+            index,
+            _getChapterIndexBy(positionIndex: index),
+            _getParagraphIndexBy(positionIndex: index),
+            _onLinkPressed,
+            _onSelectionChanged,
+            _onTextToSpeech);
       },
     );
   }

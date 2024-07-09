@@ -9,11 +9,9 @@ dependencies:
   flutter:
     sdk: flutter
   epub_view:
-    path: ../
-    # git:
-    #   url: https://github.com/Cafe-EAD/databiblio-reader.git
-    #   ref: main
-
+    git:
+      url: https://github.com/Cafe-EAD/databiblio-reader.git
+      ref: main
   internet_file: ^1.2.0
   flutter_tts: ^4.0.2
   vocsy_epub_viewer: ^2.0.0

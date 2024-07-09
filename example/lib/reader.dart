@@ -1,31 +1,33 @@
-// ignore_for_file: avoid_print, implementation_imports, depend_on_referenced_packages
-import 'package:collection/collection.dart';
-import 'dart:async';
+// ignore_for_file: avoid_print
+import 'dart:convert';
 
-import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:epub_view/epub_view.dart';
-import 'package:epub_view/src/data/models/chapter_view_value.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
-import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
+import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
+import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
+import 'package:anim_search_bar/anim_search_bar.dart';
+
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:epub_view/src/data/models/paragraph.dart' as epub_paragraph;
 
 import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
+
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 class ReaderScreen extends StatefulWidget {
   final Function(bool) onToggleTheme;
+
   final Future<EpubBook> book;
 
   const ReaderScreen({
@@ -60,10 +62,9 @@ class _ReaderScreenState extends State<ReaderScreen>
   late TabController _tabController;
   List<BookmarkModel> bookmarks = [];
   List<BookmarkModel> bookmarksinfo = [];
-  List<HighlightModel> highlightsinfo = [];
+  final TextEditingController _searchController = TextEditingController();
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
   bool _isBookmarkMarked = false;
-  bool _showSearchField = false;
 
   EpubChapterViewValue? _currentChapterValue;
 
@@ -114,14 +115,12 @@ class _ReaderScreenState extends State<ReaderScreen>
     _prefs = await SharedPreferences.getInstance();
   }
 
-  late List<epub_paragraph.Paragraph> allParagraphs;
-
   @override
   void initState() {
     _initPrefs();
     if (kIsWeb) preventContextMenu();
     _tabController = TabController(length: 2, vsync: this);
-
+   
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
 
@@ -133,7 +132,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     //   ),
     // );
 
-    _epubReaderController = EpubController(
+        _epubReaderController = EpubController(
       document: widget.book,
     );
 
@@ -158,11 +157,8 @@ class _ReaderScreenState extends State<ReaderScreen>
           })
         });
 
-    getBookmarks(userId, bookId).then((value) => bookmarks = value);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      bookmarks = await getBookmarks(userId, bookId);
-      debugPrint('>>> bookmarks $bookmarks');
-    });
+    getBookmarks(userId, bookId)
+        .then((value) => bookmarks = value as List<BookmarkModel>);
 
     super.initState();
     _initTts();
@@ -218,6 +214,8 @@ class _ReaderScreenState extends State<ReaderScreen>
     _flutterTts.setPitch(pitch);
   }
 
+  
+
   @override
   void dispose() {
     _epubReaderController.dispose();
@@ -225,43 +223,8 @@ class _ReaderScreenState extends State<ReaderScreen>
     super.dispose();
   }
 
-  void _showPageNumber() {
-    setState(() {
-      _epubReaderController.isPageNumberVisible.value = true;
-    });
-
-    Timer(const Duration(milliseconds: pageNumberVisibilityDuration), () {
-      setState(() {
-        _epubReaderController.isPageNumberVisible.value = false;
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) => Scaffold(
-        floatingActionButton: AnimatedBuilder(
-          animation: Listenable.merge([
-            _epubReaderController.currentPage,
-            _epubReaderController.isPageNumberVisible,
-          ]),
-          builder: (_, __) {
-            return AnimatedOpacity(
-              duration: const Duration(milliseconds: 400),
-              opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Página ${_epubReaderController.currentPage.value}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            );
-          },
-        ),
         appBar: AppBar(
           title: EpubViewActualChapter(
             controller: _epubReaderController,
@@ -273,17 +236,6 @@ class _ReaderScreenState extends State<ReaderScreen>
             },
           ),
           actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.bookmark),
-              color: Theme.of(context).colorScheme.onBackground,
-              onPressed: () async {
-                await _getInfoPopular();
-                setState(() {
-                  _showSearchField = !_showSearchField;
-                  _bottomSheetState = 1;
-                });
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.save_alt),
               onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
@@ -304,7 +256,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                   _changeFontSize,
                   _builderOptions,
                   _changeFontFamily,
-                  ThemeMode.system == ThemeMode.dark),
+                  ThemeMode.system==ThemeMode.dark),
             ),
             AnimSearchBar(
               width: 300,
@@ -319,93 +271,21 @@ class _ReaderScreenState extends State<ReaderScreen>
               },
             ),
             IconButton(
-                icon: const Icon(Icons.assistant_rounded),
-                onPressed: () {
-                  allParagraphs = _epubReaderController.getAllParagraphs();
-
-                  if (_epubReaderController.selectedText != null) {
-                    print(_epubReaderController.selectedText);
-                    // Encontre o parágrafo correspondente ao texto selecionado
-                    final selectedParagraph = allParagraphs.firstWhereOrNull(
-                      (paragraph) {
-                        String paragraphText =
-                            paragraph.element.text.replaceAll('\n', ' ');
-                        if (paragraphText
-                            .contains(_epubReaderController.selectedText!)) {
-                          return true;
-                        } else {
-                          return false;
-                        }
-                      },
-                    );
-
-                    if (selectedParagraph != null) {
-                      // Obter o número do capítulo
-                      int chapterIndex = _epubReaderController
-                          .currentValueListenable.value!.chapterNumber;
-                      print('chapter: $chapterIndex');
-                      // Obter o nó do parágrafo
-                      final paragraphNode = selectedParagraph.element;
-                      // print('paragraph: ${paragraphNode.outerHtml}');
-                      final nodeIndex = paragraphNode.nodes.indexWhere(
-                        (node) => node.text!
-                            .contains(_epubReaderController.selectedText!),
-                      );
-                      print('nodeIndex: $nodeIndex');
-                      // Obter o startIndex
-                      final startIndex = _chapterStartIndices[
-                          _epubReaderController.currentValueListenable.value
-                                  ?.chapter?.Title ??
-                              ''];
-                      print('startIndex: $startIndex');
-                      // Obter o comprimento do texto selecionado
-                      final selectionLength =
-                          _epubReaderController.selectedText!.length;
-                      print('selectionLength: $selectionLength');
-
-                      // Declarar as variáveis antes de usá-las
-                      final chapter = chapterIndex.toString();
-                      final paragraph = nodeIndex.toString();
-                      final startindex = startIndex.toString();
-                      final selectionlength = selectionLength.toString();
-                      final highlightedText =
-                          _epubReaderController.selectedText.toString();
-
-                      postHighlight(
-                        userId == 0 ? 1 : userId,
-                        bookId == 0 ? 1 : bookId,
-                        chapter,
-                        paragraph,
-                        startindex,
-                        selectionlength,
-                        highlightedText,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Highligth salvo com sucesso!')),
-                      );
-                    } else {
-                      print('Parágrafo selecionado não encontrado.');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Highligth não foi salvo')),
-                      );
-                    }
-
-                    // print(allParagraphs);
-                    //   if (_epubReaderController.selectedText != null &&
-                    //       _epubReaderController.generateEpubCfi() != null &&
-                    //       _epubReaderController.currentValueListenable.value !=
-                    //           null) {
-                    //     HighlightModel(
-                    //             value: _epubReaderController
-                    //                 .currentValueListenable.value,
-                    //             selectedText: _epubReaderController.selectedText,
-                    //             cfi: _epubReaderController.generateEpubCfi())
-                    //         .printar();
-                    //   }
-                  }
-                }),
+              icon: const Icon(Icons.assistant_rounded),
+              onPressed: () {
+                if (_epubReaderController.selectedText != null &&
+                    _epubReaderController.generateEpubCfi() != null &&
+                    _epubReaderController.currentValueListenable.value !=
+                        null) {
+                  HighlightModel(
+                          value: _epubReaderController
+                              .currentValueListenable.value,
+                          selectedText: _epubReaderController.selectedText,
+                          cfi: _epubReaderController.generateEpubCfi())
+                      .printar();
+                }
+              },
+            ),
           ],
         ),
         drawer: Drawer(
@@ -424,7 +304,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 onChapterChanged: (value) {
                   postLocationData(value?.position.index);
                   _currentChapter = value?.chapterNumber ?? 0;
-                  _showPageNumber();
+                  // Verifica se o capítulo mudou e se há perguntas não respondidas no novo capítulo
                   if (_currentChapter != 0 &&
                       !_hasAnsweredQuestion(
                           _questionsByChapter[_currentChapter]!.first.id)) {
@@ -441,40 +321,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 ),
                 controller: _epubReaderController,
               ),
-        bottomSheet:
-            _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
       );
-
-  Widget _getShowContainer() {
-    switch (_bottomSheetState) {
-      case 1:
-        return BookmarkBottomSheet(
-          isBookmarkMarked: _isBookmarkMarked,
-          onBookmarkToggle: () {
-            setState(() {
-              _isBookmarkMarked = !_isBookmarkMarked;
-            });
-          },
-          onClose: () {
-            setState(() {
-              _showSearchField = !_showSearchField;
-              _bottomSheetState = 0;
-            });
-          },
-          tabController: _tabController,
-          bookmarksinfo: bookmarksinfo,
-          highlightsinfo: highlightsinfo,
-          chapterValue: _currentChapterValue,
-          epubReaderController: _epubReaderController,
-          onBookmarkAdded: _updateBookmarks,
-          bookId: bookId,
-          userId: userId,
-          chapterStartIndices: _chapterStartIndices,
-        );
-      default:
-        return Container();
-    }
-  }
 
   void _onCorrectAnswer(Question question) {
     _saveAnswer(question.id);
@@ -485,6 +332,7 @@ class _ReaderScreenState extends State<ReaderScreen>
       } else {
         _showQuiz = false;
         _currentQuestionIndex = 0;
+        // Obter startIndex usando o nome do capítulo
         final startIndex =
             _chapterStartIndices[_currentChapterValue?.chapter?.Title];
         if (startIndex != null) {
@@ -494,10 +342,10 @@ class _ReaderScreenState extends State<ReaderScreen>
     });
   }
 
-  // Future<void> _clearAnsweredQuestions() async {
-  //   _prefs = await SharedPreferences.getInstance();
-  //   await _prefs.clear();
-  // }
+  Future<void> _clearAnsweredQuestions() async {
+    _prefs = await SharedPreferences.getInstance();
+    await _prefs.clear();
+  }
 
   Future<void> _saveAnswer(int questionId) async {
     final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
@@ -505,24 +353,37 @@ class _ReaderScreenState extends State<ReaderScreen>
     await _prefs.setStringList('answeredQuestions', answeredQuestions);
   }
 
-  bool _hasAnsweredQuestion(int? questionId) {
+  bool _hasAnsweredQuestion(int questionId) {
     final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
     return answeredQuestions.contains(questionId.toString());
   }
 
-  _getInfoPopular() async {
-    final bookmarks =
-        await getBookmarks(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
-    final highlights =
-        await getHighlights(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
-    setState(() {
-      bookmarksinfo = bookmarks;
-      highlightsinfo = highlights;
-    });
+
+
+
+  _getInfoBookMark() async {
+    try {
+      final response = await getBookmarks(
+          userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(response.body);
+        List<BookmarkModel> bookmarks = responseData
+            .map((bookmark) => BookmarkModel.fromJson(bookmark))
+            .toList();
+        setState(() {
+          bookmarksinfo = bookmarks;
+        });
+      } else {
+        print("Erro na requisição: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Erro ao obter bookmarks: $e");
+    }
   }
 
   void _updateBookmarks() {
-    _getInfoPopular();
+    _getInfoBookMark();
   }
 
   /*
@@ -543,6 +404,7 @@ class _ReaderScreenState extends State<ReaderScreen>
   }
 
   void _changeFontFamily() {
+    var currFont = _builderOptions.textStyle.fontFamily;
     var newFontFamily = isDefaultFont ? otherFont : defaultFont;
     isDefaultFont = !isDefaultFont;
     setState(() {
@@ -554,7 +416,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     });
   }
 
-  Future<void> _speak(String text) async {
+Future<void> _speak(String text) async {
     if (text.isNotEmpty) {
       await _flutterTts.speak(text);
     }

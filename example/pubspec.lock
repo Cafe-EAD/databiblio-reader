@@ -108,9 +108,11 @@ packages:
   epub_view:
     dependency: "direct main"
     description:
-      path: ".."
-      relative: true
-    source: path
+      path: "."
+      ref: main
+      resolved-ref: "801af78a4ec22d742e476508dbc285001a57d8b7"
+      url: "https://github.com/Cafe-EAD/databiblio-reader.git"
+    source: git
     version: "3.2.0"
   epubx:
     dependency: transitive
