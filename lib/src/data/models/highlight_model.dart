@@ -19,6 +19,7 @@ class HighlightModel {
     this.paragraph,
     this.startindex,
     this.selectionlength,
+    highlighted_text,
   });
 
   factory HighlightModel.fromJson(Map<String, dynamic> json) {
@@ -52,4 +53,10 @@ class HighlightKeys {
   static const String value = 'value';
   static const String selectedText = 'selectedText';
   static const String cfi = 'cfi';
+  static const String highlighted_text = 'highlighted_text';
+  static const String highlightid = 'highlightid';
+  static const String chapter = 'chapter';
+  static const String paragraph = 'paragraph';
+  static const String startindex = 'startindex';
+  static const String selectionlength = 'selectionlength';
 }

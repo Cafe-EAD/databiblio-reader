@@ -21,7 +21,6 @@ typedef ChaptersBuilder = Widget Function(
   BuildContext context,
   EpubViewBuilders builders,
   EpubBook document,
-  EpubController c,
   List<EpubChapter> chapters,
   List<Paragraph> paragraphs,
   int index,
@@ -59,7 +58,6 @@ class EpubViewBuilders<T> {
 
   // final void Function(int? index) onParagraphDisplayed;
   final void Function(int index) onParagraphDisplayed;
-
   const EpubViewBuilders({
     required this.options,
     this.builder = _EpubViewState._builder,
