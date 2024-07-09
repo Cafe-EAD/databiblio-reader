@@ -58,6 +58,7 @@ class EpubViewBuilders<T> {
 
   // final void Function(int? index) onParagraphDisplayed;
   final void Function(int index) onParagraphDisplayed;
+
   const EpubViewBuilders({
     required this.options,
     this.builder = _EpubViewState._builder,

@@ -50,10 +50,13 @@ class EpubView extends StatefulWidget {
   final bool shrinkWrap;
   final void Function(EpubChapterViewValue? value)? onChapterChanged;
 
+  /// Called when a document is loaded
   final void Function(EpubBook document)? onDocumentLoaded;
 
+  /// Called when a document loading error
   final void Function(Exception? error)? onDocumentError;
 
+  /// Builders
   final EpubViewBuilders builders;
 
   @override
@@ -71,21 +74,20 @@ class _EpubViewState extends State<EpubView> {
   final _chapterIndexes = <int>[];
   static String? _selectedText = '';
 
-  Timer? _pageNumberTimer;
-  static const int _pageNumberDuration = 2000;
+  EpubController get _controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
     _itemScrollController = ItemScrollController();
     _itemPositionListener = ItemPositionsListener.create();
-    widget.controller._attach(this);
-    widget.controller.loadingState.addListener(() {
-      switch (widget.controller.loadingState.value) {
+    _controller._attach(this);
+    _controller.loadingState.addListener(() {
+      switch (_controller.loadingState.value) {
         case EpubViewLoadingState.loading:
           break;
         case EpubViewLoadingState.success:
-          widget.onDocumentLoaded?.call(widget.controller._document!);
+          widget.onDocumentLoaded?.call(_controller._document!);
           break;
         case EpubViewLoadingState.error:
           widget.onDocumentError?.call(_loadingError);
@@ -101,27 +103,27 @@ class _EpubViewState extends State<EpubView> {
   @override
   void dispose() {
     _itemPositionListener!.itemPositions.removeListener(_changeListener);
-    widget.controller._detach();
+    _controller._detach();
     super.dispose();
   }
 
   Future<bool> _init() async {
-    if (widget.controller.isBookLoaded.value) {
+    if (_controller.isBookLoaded.value) {
       return true;
     }
-    _chapters = parseChapters(widget.controller._document!);
+    _chapters = parseChapters(_controller._document!);
     final parseParagraphsResult =
-        parseParagraphs(_chapters, widget.controller._document!.Content);
+        parseParagraphs(_chapters, _controller._document!.Content);
     _paragraphs = parseParagraphsResult.flatParagraphs;
     _chapterIndexes.addAll(parseParagraphsResult.chapterIndexes);
 
     _epubCfiReader = EpubCfiReader.parser(
-      cfiInput: widget.controller.epubCfi,
+      cfiInput: _controller.epubCfi,
       chapters: _chapters,
       paragraphs: _paragraphs,
     );
     _itemPositionListener!.itemPositions.addListener(_changeListener);
-    widget.controller.isBookLoaded.value = true;
+    _controller.isBookLoaded.value = true;
 
     return true;
   }
@@ -148,10 +150,8 @@ class _EpubViewState extends State<EpubView> {
       paragraphNumber: paragraphIndex + 1,
       position: position,
     );
-    widget.controller.currentValueListenable.value = _currentValue;
+    _controller.currentValueListenable.value = _currentValue;
     widget.onChapterChanged?.call(_currentValue);
-
-    widget.controller.updateCurrentPage();
   }
 
   void _gotoEpubCfi(
@@ -164,7 +164,7 @@ class _EpubViewState extends State<EpubView> {
     final index = _epubCfiReader?.paragraphIndexByCfiFragment;
 
     if (index == null) {
-      debugPrint("Epub CFI index null");
+      print("Epub CFI index null");
       return;
     }
 
@@ -178,9 +178,24 @@ class _EpubViewState extends State<EpubView> {
 
   void _onTextToSpeech() {}
 
+  void _onHighlight() {
+    print(_controller.selectedText);
+    print(_controller.currentValueListenable.value);
+
+    if (_controller.selectedText != null &&
+        _controller.generateEpubCfi() != null &&
+        _controller.currentValueListenable.value != null) {
+      HighlightModel(
+              value: _controller.currentValueListenable.value,
+              selectedText: _controller.selectedText,
+              cfi: _controller.generateEpubCfi())
+          .printar();
+    }
+  }
+
   void _onSelectionChanged(String? selection) {
     _selectedText = selection ?? '';
-    widget.controller.selectedText = selection;
+    _controller.selectedText = selection;
   }
 
   void _onLinkPressed(String href) {
@@ -189,6 +204,7 @@ class _EpubViewState extends State<EpubView> {
       return;
     }
 
+    // Chapter01.xhtml#ph1_1 -> [ph1_1, Chapter01.xhtml] || [ph1_1]
     String? hrefIdRef;
     String? hrefFileName;
 
@@ -208,7 +224,7 @@ class _EpubViewState extends State<EpubView> {
       final chapter = _chapterByFileName(hrefFileName);
       if (chapter != null) {
         final cfi = _epubCfiReader?.generateCfiChapter(
-          book: widget.controller._document,
+          book: _controller._document,
           chapter: chapter,
           additional: ['/4/2'],
         );
@@ -225,7 +241,7 @@ class _EpubViewState extends State<EpubView> {
         final paragraphIndex =
             _epubCfiReader?.getParagraphIndexByElement(paragraph.element);
         final cfi = _epubCfiReader?.generateCfi(
-          book: widget.controller._document,
+          book: _controller._document,
           chapter: chapter,
           paragraphIndex: paragraphIndex,
         );
@@ -340,7 +356,6 @@ class _EpubViewState extends State<EpubView> {
     EpubBook document,
     List<EpubChapter> chapters,
     List<Paragraph> paragraphs,
-    EpubController c,
     int index,
     int chapterIndex,
     int paragraphIndex,
@@ -372,8 +387,7 @@ class _EpubViewState extends State<EpubView> {
                   builders,
                   paragraphs,
                   document,
-                  onHighlight,
-                  _selectedText);
+                  onHighlight);
             }
           },
           child: SelectionArea(
@@ -413,36 +427,31 @@ class _EpubViewState extends State<EpubView> {
             onSelectionChanged: (selection) {
               onSelectedChanged(selection?.plainText);
             },
-            child: Stack(
-              children: [
-                Html(
-                  data: paragraphs[index].element.outerHtml,
-                  onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
-                  style: {
-                    'html': Style(
-                      padding: HtmlPaddings.only(
-                        top: (options.paragraphPadding as EdgeInsets?)?.top,
-                        right: (options.paragraphPadding as EdgeInsets?)?.right,
-                        bottom:
-                            (options.paragraphPadding as EdgeInsets?)?.bottom,
-                        left: (options.paragraphPadding as EdgeInsets?)?.left,
-                      ),
-                    ).merge(Style.fromTextStyle(options.textStyle)),
+            child: Html(
+              data: paragraphs[index].element.outerHtml,
+              onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
+              style: {
+                'html': Style(
+                  padding: HtmlPaddings.only(
+                    top: (options.paragraphPadding as EdgeInsets?)?.top,
+                    right: (options.paragraphPadding as EdgeInsets?)?.right,
+                    bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
+                    left: (options.paragraphPadding as EdgeInsets?)?.left,
+                  ),
+                ).merge(Style.fromTextStyle(options.textStyle)),
+              },
+              extensions: [
+                TagExtension(
+                  tagsToExtend: {"img"},
+                  builder: (imageContext) {
+                    final url =
+                        imageContext.attributes['src']!.replaceAll('../', '');
+                    final content = Uint8List.fromList(
+                        document.Content!.Images![url]!.Content!);
+                    return Image(
+                      image: MemoryImage(content),
+                    );
                   },
-                  extensions: [
-                    TagExtension(
-                      tagsToExtend: {"img"},
-                      builder: (imageContext) {
-                        final url = imageContext.attributes['src']!
-                            .replaceAll('../', '');
-                        final content = Uint8List.fromList(
-                            document.Content!.Images![url]!.Content!);
-                        return Image(
-                          image: MemoryImage(content),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -452,32 +461,17 @@ class _EpubViewState extends State<EpubView> {
     );
   }
 
-  void _onHighlight() {
-    print(_selectedText);
-    if (widget.controller.selectedText != null &&
-        widget.controller.generateEpubCfi() != null &&
-        widget.controller.currentValueListenable.value != null) {
-      HighlightModel(
-              value: widget.controller.currentValueListenable.value,
-              selectedText: widget.controller.selectedText,
-              cfi: widget.controller.generateEpubCfi())
-          .printar();
-    }
-  }
-
   static void _showContextMenu(
-    BuildContext context,
-    Offset position,
-    OnSelectedChanged onSelectedChanged,
-    paragraphIndex,
-    chapterIndex,
-    index,
-    builders,
-    paragraphs,
-    document,
-    onHighlight,
-    _selectedText,
-  ) {
+      BuildContext context,
+      Offset position,
+      OnSelectedChanged onSelectedChanged,
+      paragraphIndex,
+      chapterIndex,
+      index,
+      builders,
+      paragraphs,
+      document,
+      onHighlight) {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
@@ -495,14 +489,23 @@ class _EpubViewState extends State<EpubView> {
           child: const Text('Marcar Texto 1'),
           onTap: () {
             onHighlight();
-            // print('teste');
-            print(_selectedText);
+            print('teste');
             // print(paragraphIndex);
             // print(chapterIndex);
             // print(index);
             // print(builders);
             // print(paragraphs.toString());
             // print(document);
+
+            // if (_controller.selectedText != null &&
+            //     _controller.generateEpubCfi() != null &&
+            //     _controller.currentValueListenable.value != null) {
+            //   HighlightModel(
+            //           value: _controller.currentValueListenable.value,
+            //           selectedText: _controller.selectedText,
+            //           cfi: _controller.generateEpubCfi())
+            //       .printar();
+            // }
           },
         ),
         PopupMenuItem(
@@ -526,7 +529,6 @@ class _EpubViewState extends State<EpubView> {
           context,
           widget.builders,
           widget.controller._document!,
-          widget.controller,
           _chapters,
           _paragraphs,
           index,
@@ -586,7 +588,7 @@ class _EpubViewState extends State<EpubView> {
     return widget.builders.builder(
       context,
       widget.builders,
-      widget.controller.loadingState.value,
+      _controller.loadingState.value,
       _buildLoaded,
       _loadingError,
     );
