@@ -18,18 +18,18 @@ typedef EpubViewBuilder<T> = Widget Function(
 );
 
 typedef ChaptersBuilder = Widget Function(
-  BuildContext context,
-  EpubViewBuilders builders,
-  EpubBook document,
-  List<EpubChapter> chapters,
-  List<Paragraph> paragraphs,
-  int index,
-  int chapterIndex,
-  int paragraphIndex,
-  ExternalLinkPressed onExternalLinkPressed,
-  OnSelectedChanged onSelectedChanged,
-  OnTextToSpeech onTextToSpeech,
-);
+    BuildContext context,
+    EpubViewBuilders builders,
+    EpubBook document,
+    List<EpubChapter> chapters,
+    List<Paragraph> paragraphs,
+    int index,
+    int chapterIndex,
+    int paragraphIndex,
+    ExternalLinkPressed onExternalLinkPressed,
+    OnSelectedChanged onSelectedChanged,
+    OnTextToSpeech onTextToSpeech,
+    OnHighlight onHighlight);
 
 typedef ChapterDividerBuilder = Widget Function(EpubChapter value);
 typedef ParagraphBuilder = Widget Function(

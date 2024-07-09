@@ -56,15 +56,15 @@ Future<Response> buildHttpResponse(String endPoint,
       response = await http.post(
         url,
         body: jsonEncode(request),
-        headers: headers,
+        // headers: headers,
         encoding: isStripePayment ? Encoding.getByName("utf-8") : null,
       );
     } else if (method == HttpMethod.DELETE) {
-      response = await delete(url, headers: headers);
+      response = await delete(url);
     } else if (method == HttpMethod.PUT) {
-      response = await put(url, body: jsonEncode(request), headers: headers);
+      response = await put(url, body: jsonEncode(request));
     } else {
-      response = await get(url, headers: headers);
+      response = await get(url);
     }
 
     log('Response (${method.name}) ${response.statusCode}: ${response.body}');
