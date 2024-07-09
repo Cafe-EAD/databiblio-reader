@@ -48,27 +48,22 @@ Future<Response> buildHttpResponse(String endPoint,
     Uri url =
         buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
     log(url);
-
     Response response;
-
     if (method == HttpMethod.POST) {
       log('Request: $request');
       response = await http.post(
         url,
         body: jsonEncode(request),
-        headers: headers,
         encoding: isStripePayment ? Encoding.getByName("utf-8") : null,
       );
     } else if (method == HttpMethod.DELETE) {
-      response = await delete(url, headers: headers);
+      response = await delete(url);
     } else if (method == HttpMethod.PUT) {
       response = await put(url, body: jsonEncode(request), headers: headers);
     } else {
-      response = await get(url, headers: headers);
+      response = await get(url);
     }
-
     log('Response (${method.name}) ${response.statusCode}: ${response.body}');
-
     return response;
   } else {
     throw errorInternetNotAvailable;

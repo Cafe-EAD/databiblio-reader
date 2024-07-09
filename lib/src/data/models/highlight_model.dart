@@ -1,13 +1,9 @@
-// ignore_for_file: non_constant_identifier_names
-
-import '../utils/model_keys.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 class HighlightModel {
   EpubChapterViewValue? value;
   String? selectedText;
   String? cfi;
-  String? highlighted_text;
   int? highlightid;
   String? chapter;
   String? paragraph;
@@ -19,7 +15,6 @@ class HighlightModel {
     this.selectedText,
     this.cfi,
     this.highlightid,
-    this.highlighted_text,
     this.chapter,
     this.paragraph,
     this.startindex,
@@ -31,12 +26,12 @@ class HighlightModel {
       value: json[HighlightKeys.value],
       selectedText: json[HighlightKeys.selectedText],
       cfi: json[HighlightKeys.cfi],
-      highlightid: json['highlightid'],
-      highlighted_text: json['highlighted_text'],
-      chapter: json['chapter'],
-      paragraph: json['paragraph'],
-      startindex: json['startindex'],
-      selectionlength: json['selectionlength'],
+      highlightid: json[HighlightKeys.highlightid],
+      highlighted_text: json[HighlightKeys.highlighted_text],
+      chapter: json[HighlightKeys.chapter],
+      paragraph: json[HighlightKeys.paragraph],
+      startindex: json[HighlightKeys.startindex],
+      selectionlength: json[HighlightKeys.selectionlength],
     );
   }
   void printar() {
@@ -51,4 +46,10 @@ class HighlightModel {
     print('cfi: ${cfi!}');
     print('========================================');
   }
+}
+
+class HighlightKeys {
+  static const String value = 'value';
+  static const String selectedText = 'selectedText';
+  static const String cfi = 'cfi';
 }
