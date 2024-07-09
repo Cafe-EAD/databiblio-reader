@@ -26,11 +26,12 @@ class HighlightModel {
       value: json[HighlightKeys.value],
       selectedText: json[HighlightKeys.selectedText],
       cfi: json[HighlightKeys.cfi],
-      highlightid: json['highlightid'],
-      chapter: json['chapter'],
-      paragraph: json['paragraph'],
-      startindex: json['startindex'],
-      selectionlength: json['selectionlength'],
+      highlightid: json[HighlightKeys.highlightid],
+      highlighted_text: json[HighlightKeys.highlighted_text],
+      chapter: json[HighlightKeys.chapter],
+      paragraph: json[HighlightKeys.paragraph],
+      startindex: json[HighlightKeys.startindex],
+      selectionlength: json[HighlightKeys.selectionlength],
     );
   }
   void printar() {
