@@ -1,6 +1,7 @@
 name: epub_view_example
 description: Example
 version: 1.0.0+1
+publish_to: none
 
 environment:
   sdk: '>=2.17.1 <4.0.0'
@@ -9,9 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   epub_view:
-    git:
-      url: https://github.com/Cafe-EAD/databiblio-reader.git
-      ref: main
+    path: ../
+    # git:
+    #   url: https://github.com/Cafe-EAD/databiblio-reader.git
+    #   ref: main
   internet_file: ^1.2.0
   flutter_tts: ^4.0.2
   vocsy_epub_viewer: ^2.0.0
