@@ -21,13 +21,11 @@ import 'widget/search_match.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 
 class ReaderScreen extends StatefulWidget {
-  final Function(bool) onToggleTheme;
 
   final Future<EpubBook> book;
 
   const ReaderScreen({
     Key? key,
-    required this.onToggleTheme,
     required this.book,
   }) : super(key: key);
 
@@ -207,115 +205,123 @@ class _ReaderScreenState extends State<ReaderScreen>
     _flutterTts.stop();
     super.dispose();
   }
-
+  ThemeMode _themeMode = ThemeMode.system;
+  void toggleTheme(bool isDark) {
+    setState(() {
+          _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: EpubViewActualChapter(
-            controller: _epubReaderController,
-            builder: (chapterValue) {
-              return Text(
-                chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-                textAlign: TextAlign.start,
-              );
-            },
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.format_size),
-              onPressed: () => showCustomModalBottomSheet(
-                  context,
-                  widget.onToggleTheme,
-                  _changeFontSize,
-                  _builderOptions,
-                  _changeFontFamily,
-                  ThemeMode.system == ThemeMode.dark),
-            ),
-            AnimSearchBar(
-              width: 300,
-              textController: textController,
-              onSuffixTap: () {
-                setState(() {
-                  textController.clear();
-                });
-              },
-              onSubmitted: (busca) async {
-                await searchMatch.busca(busca, context);
+  Widget build(BuildContext context) => Theme(
+    data: _themeMode==ThemeMode.dark? ThemeData.dark():ThemeData.light(),
+    child: Scaffold(
+          appBar: AppBar(
+            title: EpubViewActualChapter(
+              controller: _epubReaderController,
+              builder: (chapterValue) {
+                return Text(
+                  chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+                  textAlign: TextAlign.start,
+                );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.assistant_rounded),
-              onPressed: () {
-                if (_epubReaderController.selectedText != null &&
-                    _epubReaderController.generateEpubCfi() != null &&
-                    _epubReaderController.currentValueListenable.value !=
-                        null) {
-                  HighlightModel(
-                          value: _epubReaderController
-                              .currentValueListenable.value,
-                          selectedText: _epubReaderController.selectedText,
-                          cfi: _epubReaderController.generateEpubCfi())
-                      .printar();
-                }
-              },
-            ),
-          ],
-        ),
-        drawer: Drawer(
-          child: EpubViewTableOfContents(
-            controller: _epubReaderController,
-            itemBuilder: (context, index, chapter, itemCount) {
-              return EpubViewActualChapter(
-                controller: _epubReaderController,
-                builder: (chapterAtual) {
-                  return Container(
-                    color: chapterAtual!.chapterNumber == (index + 1)
-                        ? Theme.of(context).primaryColor
-                        : null,
-                    child: ListTile(
-                        title: Text(chapter.title!.trim()),
-                        onTap: () => {
-                              setState(() {
-                                _epubReaderController.scrollTo(
-                                    index: chapter.startIndex);
-                              })
-                            }),
-                  );
+            actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.format_size),
+                onPressed: () => showCustomModalBottomSheet(
+                    context,
+                    toggleTheme,
+                    _changeFontSize,
+                    _builderOptions,
+                    _changeFontFamily,
+                    ThemeMode.system == ThemeMode.dark),
+              ),
+              AnimSearchBar(
+                width: 300,
+                textController: textController,
+                onSuffixTap: () {
+                  setState(() {
+                    textController.clear();
+                  });
                 },
-              );
-            },
-          ),
-        ),
-        body: _showQuiz
-            ? QuizModal(
-                question: _questionsByChapter[_currentChapter]![
-                    _currentQuestionIndex],
-                onCorrectAnswer: () {
-                  _onCorrectAnswer(_questionsByChapter[_currentChapter]![
-                      _currentQuestionIndex]);
+                onSubmitted: (busca) async {
+                  await searchMatch.busca(busca, context);
                 },
-              )
-            : EpubView(
-                onChapterChanged: (value) {
-                  postLocationData(value?.position.index);
-                  _currentChapter = value?.chapterNumber ?? 0;
-                  if (_currentChapter != 0 &&
-                      !_hasAnsweredQuestion(
-                          _questionsByChapter[_currentChapter]!.first.id)) {
-                    setState(() {
-                      _currentChapterValue = value;
-                      _showQuiz = true;
-                      _currentQuestionIndex = 0;
-                    });
+              ),
+              IconButton(
+                icon: const Icon(Icons.assistant_rounded),
+                onPressed: () {
+                  if (_epubReaderController.selectedText != null &&
+                      _epubReaderController.generateEpubCfi() != null &&
+                      _epubReaderController.currentValueListenable.value !=
+                          null) {
+                    HighlightModel(
+                            value: _epubReaderController
+                                .currentValueListenable.value,
+                            selectedText: _epubReaderController.selectedText,
+                            cfi: _epubReaderController.generateEpubCfi())
+                        .printar();
                   }
                 },
-                builders: EpubViewBuilders(
-                  options: _builderOptions,
-                  chapterDividerBuilder: (_) => const Divider(),
-                ),
-                controller: _epubReaderController,
               ),
-      );
+            ],
+          ),
+          drawer: Drawer(
+            child: EpubViewTableOfContents(
+              controller: _epubReaderController,
+              itemBuilder: (context, index, chapter, itemCount) {
+                return EpubViewActualChapter(
+                  controller: _epubReaderController,
+                  builder: (chapterAtual) {
+                    return Container(
+                      color: chapterAtual!.chapterNumber == (index + 1)
+                          ? Theme.of(context).primaryColor
+                          : null,
+                      child: ListTile(
+                          title: Text(chapter.title!.trim()),
+                          onTap: () => {
+                                setState(() {
+                                  _epubReaderController.scrollTo(
+                                      index: chapter.startIndex);
+                                })
+                              }),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          body: _showQuiz
+              ? QuizModal(
+                  question: _questionsByChapter[_currentChapter]![
+                      _currentQuestionIndex],
+                  onCorrectAnswer: () {
+                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![
+                        _currentQuestionIndex]);
+                  },
+                )
+              : EpubView(
+                  onChapterChanged: (value) {
+                    postLocationData(value?.position.index);
+                    _currentChapter = value?.chapterNumber ?? 0;
+                    if (_currentChapter != 0 &&
+                        !_hasAnsweredQuestion(
+                            _questionsByChapter[_currentChapter]!.first.id)) {
+                      setState(() {
+                        _currentChapterValue = value;
+                        _showQuiz = true;
+                        _currentQuestionIndex = 0;
+                      });
+                    }
+                  },
+                  builders: EpubViewBuilders(
+                    options: _builderOptions,
+                    chapterDividerBuilder: (_) => const Divider(),
+                  ),
+                  controller: _epubReaderController,
+                ),
+        ),
+  );
 
   void _onCorrectAnswer(Question question) {
     _saveAnswer(question.id);
