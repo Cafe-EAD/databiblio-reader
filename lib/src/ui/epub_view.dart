@@ -5,8 +5,9 @@ import 'package:epub_view/src/data/epub_cfi_reader.dart';
 import 'package:epub_view/src/data/epub_parser.dart';
 import 'package:epub_view/src/data/models/chapter.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
-import 'package:epub_view/src/data/models/highlight_model.dart';
+import 'package:epub_view/src/data/models/paragraph.dart' as epub_paragraph;
 import 'package:epub_view/src/data/models/paragraph.dart';
+import 'package:epub_view/src/network/rest.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -25,7 +26,7 @@ const _minLeadingEdge = -0.05;
 typedef ExternalLinkPressed = void Function(String href);
 typedef OnSelectedChanged = void Function(String? selection);
 typedef OnTextToSpeech = void Function();
-typedef OnHighlight = void Function();
+typedef OnHighlight = void Function(String text); //TODO
 int? index;
 
 class EpubView extends StatefulWidget {
@@ -176,18 +177,52 @@ class _EpubViewState extends State<EpubView> {
 
   void _onTextToSpeech() {}
 
-  void _onHighlight() {
-    print(_controller.selectedText);
-    print(_controller.currentValueListenable.value);
+  void _onHighlight(String? selectedText) {
+    _controller.allParagraphs = _controller.getAllParagraphs();
 
-    if (_controller.selectedText != null &&
-        _controller.generateEpubCfi() != null &&
-        _controller.currentValueListenable.value != null) {
-      HighlightModel(
-              value: _controller.currentValueListenable.value,
-              selectedText: _controller.selectedText,
-              cfi: _controller.generateEpubCfi())
-          .printar();
+    if (selectedText != null) {
+      final selectedParagraph = _controller.allParagraphs.firstWhereOrNull(
+        (paragraph) {
+          String paragraphText = paragraph.element.text.replaceAll('\n', ' ');
+          if (paragraphText.contains(selectedText)) {
+            return true;
+          } else {
+            return false;
+          }
+        },
+      );
+
+      if (selectedParagraph != null) {
+        int chapterIndex = _controller.currentValueListenable.value!.chapterNumber;
+        final paragraphNode = selectedParagraph.element;
+        final nodeIndex = paragraphNode.nodes
+            .indexWhere((node) => node.text!.trim().contains(selectedText.trim()));
+        final startIndex = _controller
+            .chapterStartIndices[_controller.currentValueListenable.value?.chapter?.Title ?? ''];
+        final selectionLength = selectedText.length;
+        final chapter = chapterIndex.toString();
+        final paragraph = nodeIndex.toString();
+        final startindex = startIndex.toString();
+        final selectionlength = selectionLength.toString();
+        final highlightedText = selectedText.toString();
+
+        postHighlight(
+          _controller.userId == 0 ? 1 : _controller.userId,
+          _controller.bookId == 0 ? 1 : _controller.bookId,
+          chapter,
+          paragraph,
+          startindex,
+          selectionlength,
+          highlightedText,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Highligth salvo com sucesso!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Highligth não foi salvo')),
+        );
+      }
     }
   }
 
@@ -202,7 +237,6 @@ class _EpubViewState extends State<EpubView> {
       return;
     }
 
-    // Chapter01.xhtml#ph1_1 -> [ph1_1, Chapter01.xhtml] || [ph1_1]
     String? hrefIdRef;
     String? hrefFileName;
 
@@ -391,7 +425,7 @@ class _EpubViewState extends State<EpubView> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      onHighlight();
+                      onHighlight(_selectedText ?? '');
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8),
