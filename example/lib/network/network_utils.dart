@@ -62,7 +62,7 @@ Future<Response> buildHttpResponse(String endPoint,
     } else if (method == HttpMethod.DELETE) {
       response = await delete(url, headers: headers);
     } else if (method == HttpMethod.PUT) {
-      response = await put(url, body: jsonEncode(request), headers: headers);
+      response = await put(url, body: jsonEncode(request));
     } else {
       response = await get(url, headers: headers);
     }
