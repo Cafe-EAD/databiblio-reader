@@ -47,6 +47,7 @@ class EpubController {
           index: index,
           alignment: alignment,
         );
+        updateCurrentPage();
         break;
       }
       await Future.delayed(const Duration(milliseconds: 100));
@@ -63,13 +64,16 @@ class EpubController {
     Duration duration = const Duration(milliseconds: 250),
     double alignment = 0,
     Curve curve = Curves.linear,
-  }) =>
-      _epubViewState?._itemScrollController?.scrollTo(
-        index: index,
-        duration: duration,
-        alignment: alignment,
-        curve: curve,
-      );
+  }) {
+    final result = _epubViewState?._itemScrollController?.scrollTo(
+      index: index,
+      duration: duration,
+      alignment: alignment,
+      curve: curve,
+    );
+    updateCurrentPage(); // Atualiza a página ao rolar para um índice
+    return result;
+  }
 
   void gotoEpubCfi(
     String epubCfi, {
@@ -83,6 +87,7 @@ class EpubController {
       duration: duration,
       curve: curve,
     );
+    updateCurrentPage();
   }
 
   int? getCurrentIndex() {

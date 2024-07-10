@@ -22,7 +22,6 @@ import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
 
 class ReaderScreen extends StatefulWidget {
-
   final Future<EpubBook> book;
 
   const ReaderScreen({
@@ -226,6 +225,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       });
     });
   }
+
   ThemeMode _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
@@ -233,9 +233,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) => Theme(
-        data: _themeMode==ThemeMode.dark? ThemeData.dark():ThemeData.light(),
-
-    child: Scaffold(
+        data: _themeMode == ThemeMode.dark ? ThemeData.dark() : ThemeData.light(),
+        child: Scaffold(
           floatingActionButton: AnimatedBuilder(
             animation: Listenable.merge([
               _epubReaderController.currentPage,
@@ -244,7 +243,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
             builder: (_, __) {
               return AnimatedOpacity(
                 duration: const Duration(milliseconds: 400),
-                opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
+                // opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
+                opacity: 1,
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -283,13 +283,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
               ),
               IconButton(
                 icon: const Icon(Icons.format_size),
-                onPressed: () => showCustomModalBottomSheet(
-                    context,
-                    toggleTheme,
-                    _changeFontSize,
-                    _builderOptions,
-                    _changeFontFamily,
-                    ThemeMode.system == ThemeMode.dark),
+                onPressed: () => showCustomModalBottomSheet(context, toggleTheme, _changeFontSize,
+                    _builderOptions, _changeFontFamily, ThemeMode.system == ThemeMode.dark),
               ),
               AnimSearchBar(
                 width: 300,
@@ -307,7 +302,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                 icon: const Icon(Icons.assistant_rounded),
                 onPressed: () {
                   _epubReaderController.allParagraphs = _epubReaderController.getAllParagraphs();
-    
+
                   if (_epubReaderController.selectedText != null) {
                     print(_epubReaderController.selectedText);
                     // Encontre o parágrafo correspondente ao texto selecionado
@@ -317,7 +312,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                         // print(_epubReaderController.selectedText);
                         // print(paragraphText);
                         // print('>>>>>>>>>>>>>>>>');
-    
+
                         if (paragraphText.contains(_epubReaderController.selectedText!)) {
                           return true;
                         } else {
@@ -325,7 +320,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                         }
                       },
                     );
-    
+
                     if (selectedParagraph != null) {
                       // Obter o número do capítulo
                       int chapterIndex =
@@ -344,14 +339,14 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                       // Obter o comprimento do texto selecionado
                       final selectionLength = _epubReaderController.selectedText!.length;
                       print('selectionLength: $selectionLength');
-    
+
                       // Declarar as variáveis antes de usá-las
                       final chapter = chapterIndex.toString();
                       final paragraph = nodeIndex.toString();
                       final startindex = startIndex.toString();
                       final selectionlength = selectionLength.toString();
                       final highlightedText = _epubReaderController.selectedText.toString();
-    
+
                       postHighlight(
                         _epubReaderController.userId == 0 ? 1 : _epubReaderController.userId,
                         _epubReaderController.bookId == 0 ? 1 : _epubReaderController.bookId,
@@ -370,7 +365,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                         const SnackBar(content: Text('Highligth não foi salvo')),
                       );
                     }
-    
+
                     // print(allParagraphs);
                     //   if (_epubReaderController.selectedText != null &&
                     //       _epubReaderController.generateEpubCfi() != null &&
@@ -414,20 +409,23 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
           ),
           body: _showQuiz
               ? QuizModal(
-                  question: _questionsByChapter[_currentChapter]![
-                      _currentQuestionIndex],
+                  question: _questionsByChapter[_currentChapter]![_currentQuestionIndex],
                   onCorrectAnswer: () {
-                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![
-                        _currentQuestionIndex]);
+                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![_currentQuestionIndex]);
                   },
                 )
               : EpubView(
-                controller: _epubReaderController,
+                  builders: EpubViewBuilders(
+                    options: _builderOptions,
+                    chapterDividerBuilder: (_) => const Divider(),
+                  ),
+                  controller: _epubReaderController,
                   onChapterChanged: (value) {
                     postLocationData(value?.position.index);
                     _currentChapter = value?.chapterNumber ?? 0;
-                    if (!kIsWeb) _showPageNumber();
-    
+                    _epubReaderController.updateCurrentPage(); // Chamar o método aqui
+                    // if (!kIsWeb) _showPageNumber();
+
                     if (_epubReaderController.bookId == 4 &&
                         _currentChapter != 0 &&
                         !_hasAnsweredQuestion(_questionsByChapter[_currentChapter]!.first.id)) {
@@ -441,7 +439,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                 ),
           bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
         ),
-  );
+      );
 
   Widget _getShowContainer() {
     switch (_bottomSheetState) {
