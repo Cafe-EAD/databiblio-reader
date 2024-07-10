@@ -6,15 +6,10 @@ import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
-import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
-import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
-
-//import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'model/highlight_model.dart';
@@ -237,18 +232,6 @@ class _ReaderScreenState extends State<ReaderScreen>
           ),
           actions: <Widget>[
             IconButton(
-              icon: const Icon(Icons.save_alt),
-              onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
-            ),
-            IconButton(
-              icon: const Icon(Icons.remove),
-              onPressed: () => _changeFontSize(20),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _changeFontFamily(),
-            ),
-            IconButton(
               icon: const Icon(Icons.format_size),
               onPressed: () => showCustomModalBottomSheet(
                   context,
@@ -289,7 +272,16 @@ class _ReaderScreenState extends State<ReaderScreen>
           ],
         ),
         drawer: Drawer(
-          child: EpubViewTableOfContents(controller: _epubReaderController),
+          
+          child: EpubViewTableOfContents(controller: _epubReaderController,
+          itemBuilder: (context, index, chapter, itemCount) {
+            return ListTile(
+                    title: Text(chapter.title!.trim()),
+                    onTap: () => {
+                      _epubReaderController.scrollTo(index: chapter.startIndex),
+                    }
+                  );
+          },),
         ),
         body: _showQuiz
             ? QuizModal(
