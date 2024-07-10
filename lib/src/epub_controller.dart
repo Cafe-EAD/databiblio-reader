@@ -181,7 +181,7 @@ class EpubController {
         final totalCharacters = paragraphIndex * charactersPerPage;
         final newPage = (totalCharacters / charactersPerPage).ceil();
         if (newPage != currentPage.value) {
-          currentPage.value = newPage;
+          currentPage.value = newPage == 0 ? 1 : newPage;
           debugPrint('>>> Current Page: ${currentPage.value}');
         }
       }

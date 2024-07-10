@@ -322,25 +322,14 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                     );
 
                     if (selectedParagraph != null) {
-                      // Obter o número do capítulo
                       int chapterIndex =
                           _epubReaderController.currentValueListenable.value!.chapterNumber;
-                      print('chapter: $chapterIndex');
-                      // Obter o nó do parágrafo
                       final paragraphNode = selectedParagraph.element;
-                      // print('paragraph: ${paragraphNode.outerHtml}');
                       final nodeIndex = paragraphNode.nodes.indexWhere((node) =>
                           node.text!.trim().contains(_epubReaderController.selectedText!.trim()));
-                      print('nodeIndex: $nodeIndex');
-                      // Obter o startIndex
                       final startIndex = _epubReaderController.chapterStartIndices[
                           _epubReaderController.currentValueListenable.value?.chapter?.Title ?? ''];
-                      print('startIndex: $startIndex');
-                      // Obter o comprimento do texto selecionado
                       final selectionLength = _epubReaderController.selectedText!.length;
-                      print('selectionLength: $selectionLength');
-
-                      // Declarar as variáveis antes de usá-las
                       final chapter = chapterIndex.toString();
                       final paragraph = nodeIndex.toString();
                       final startindex = startIndex.toString();
@@ -360,24 +349,10 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                         const SnackBar(content: Text('Highligth salvo com sucesso!')),
                       );
                     } else {
-                      print('Parágrafo selecionado não encontrado.');
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Highligth não foi salvo')),
                       );
                     }
-
-                    // print(allParagraphs);
-                    //   if (_epubReaderController.selectedText != null &&
-                    //       _epubReaderController.generateEpubCfi() != null &&
-                    //       _epubReaderController.currentValueListenable.value !=
-                    //           null) {
-                    //     HighlightModel(
-                    //             value: _epubReaderController
-                    //                 .currentValueListenable.value,
-                    //             selectedText: _epubReaderController.selectedText,
-                    //             cfi: _epubReaderController.generateEpubCfi())
-                    //         .printar();
-                    //   }
                   }
                 },
               ),
@@ -415,15 +390,15 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   },
                 )
               : EpubView(
-                builders: EpubViewBuilders(
+                  builders: EpubViewBuilders(
                     options: _builderOptions,
                     chapterDividerBuilder: (_) => const Divider(),
                   ),
-                controller: _epubReaderController,
+                  controller: _epubReaderController,
                   onChapterChanged: (value) {
                     postLocationData(value?.position.index);
                     _currentChapter = value?.chapterNumber ?? 0;
-                    _epubReaderController.updateCurrentPage(); // Chamar o método aqui
+                    _epubReaderController.updateCurrentPage();
                     // if (!kIsWeb) _showPageNumber();
 
                     if (_epubReaderController.bookId == 4 &&
