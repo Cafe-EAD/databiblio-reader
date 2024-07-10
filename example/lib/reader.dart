@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'dart:async';
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
@@ -225,8 +226,43 @@ class _ReaderScreenState extends State<ReaderScreen>
     super.dispose();
   }
 
+  void _showPageNumber() {
+    setState(() {
+      _epubReaderController.isPageNumberVisible.value = true;
+    });
+
+    Timer(const Duration(milliseconds: pageNumberVisibilityDuration), () {
+      setState(() {
+        _epubReaderController.isPageNumberVisible.value = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
+        floatingActionButton: AnimatedBuilder(
+          animation: Listenable.merge([
+            _epubReaderController.currentPage,
+            _epubReaderController.isPageNumberVisible,
+          ]),
+          builder: (_, __) {
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 400),
+              opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Página ${_epubReaderController.currentPage.value}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            );
+          },
+        ),
         appBar: AppBar(
           title: EpubViewActualChapter(
             controller: _epubReaderController,
@@ -402,6 +438,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 onChapterChanged: (value) {
                   postLocationData(value?.position.index);
                   _currentChapter = value?.chapterNumber ?? 0;
+                  _showPageNumber();
 
                   if (bookId == 4 &&
                       _currentChapter != 0 &&

@@ -5,7 +5,7 @@ issue_tracker: https://github.com/ScerIO/packages.flutter/issues?q=is%3Aissue+is
 version: 3.2.0
 
 environment:
-  sdk: ">=2.17.1 <4.0.0"
+  sdk: '>=2.17.1 <4.0.0'
   flutter: '>=2.0.0'
 
 dependencies:
@@ -32,4 +32,3 @@ flutter:
     - family: OpenDyslexic
       fonts:
         - asset: assets/fonts/OpenDyslexic3-Regular.ttf
-

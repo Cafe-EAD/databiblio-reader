@@ -73,7 +73,8 @@ class _EpubViewState extends State<EpubView> {
   EpubChapterViewValue? _currentValue;
   final _chapterIndexes = <int>[];
   static String? _selectedText = '';
-
+  Timer? _pageNumberTimer;
+  static const int _pageNumberDuration = 2000;
   EpubController get _controller => widget.controller;
 
   @override

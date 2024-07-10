@@ -110,7 +110,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "1d5ad96007091ba3937e30f7b1c8e7785e405092"
+      resolved-ref: f71d277be1426beff8cc65eb5a154dec3c88e518
       url: "https://github.com/Cafe-EAD/databiblio-reader.git"
     source: git
     version: "3.2.0"
