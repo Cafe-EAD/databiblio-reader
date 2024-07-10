@@ -5,7 +5,6 @@ import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
-import 'package:epub_view/src/data/models/paragraph.dart' as epub_paragraph;
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
@@ -46,8 +45,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
-  late int userId;
-  late int bookId;
+
   TtsState ttsState = TtsState.stopped;
   double volume = 0.5;
   double pitch = 1.0;
@@ -97,8 +95,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       ),
     ],
   };
-  late List<epub_paragraph.Paragraph> allParagraphs;
-  final Map<String, int> _chapterStartIndices = {};
+
   late SharedPreferences _prefs;
   int _currentQuestionIndex = 0;
   int _currentChapter = 0;
@@ -115,9 +112,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
     _tabController = TabController(length: 2, vsync: this);
 
-    userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
-    bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
-
     // _epubReaderController = EpubController(
     //   document: EpubDocument.openAsset(
     //     kDebugMode
@@ -130,13 +124,16 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       document: widget.book,
     );
 
+    _epubReaderController.userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
+    _epubReaderController.bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
+
     _epubReaderController.tableOfContentsListenable.addListener(() {
       //  _epubReaderController._epubViewState._paragraphs;
       final chapters = _epubReaderController.tableOfContentsListenable.value;
-      _chapterStartIndices.clear();
+      _epubReaderController.chapterStartIndices.clear();
       for (int i = 0; i < chapters.length; i++) {
         if (chapters[i].title != null) {
-          _chapterStartIndices[chapters[i].title!] = chapters[i].startIndex;
+          _epubReaderController.chapterStartIndices[chapters[i].title!] = chapters[i].startIndex;
         }
       }
     });
@@ -152,9 +149,10 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
           })
         });
 
-    getBookmarks(userId, bookId).then((value) => bookmarks = value);
+    getBookmarks(_epubReaderController.userId, _epubReaderController.bookId)
+        .then((value) => bookmarks = value);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      bookmarks = await getBookmarks(userId, bookId);
+      bookmarks = await getBookmarks(_epubReaderController.userId, _epubReaderController.bookId);
       debugPrint('>>> bookmarks $bookmarks');
     });
 
@@ -303,12 +301,12 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
             IconButton(
               icon: const Icon(Icons.assistant_rounded),
               onPressed: () {
-                allParagraphs = _epubReaderController.getAllParagraphs();
+                _epubReaderController.allParagraphs = _epubReaderController.getAllParagraphs();
 
                 if (_epubReaderController.selectedText != null) {
                   print(_epubReaderController.selectedText);
                   // Encontre o parágrafo correspondente ao texto selecionado
-                  final selectedParagraph = allParagraphs.firstWhereOrNull(
+                  final selectedParagraph = _epubReaderController.allParagraphs.firstWhereOrNull(
                     (paragraph) {
                       String paragraphText = paragraph.element.text.replaceAll('\n', ' ');
                       // print(_epubReaderController.selectedText);
@@ -335,7 +333,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                         node.text!.trim().contains(_epubReaderController.selectedText!.trim()));
                     print('nodeIndex: $nodeIndex');
                     // Obter o startIndex
-                    final startIndex = _chapterStartIndices[
+                    final startIndex = _epubReaderController.chapterStartIndices[
                         _epubReaderController.currentValueListenable.value?.chapter?.Title ?? ''];
                     print('startIndex: $startIndex');
                     // Obter o comprimento do texto selecionado
@@ -350,8 +348,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                     final highlightedText = _epubReaderController.selectedText.toString();
 
                     postHighlight(
-                      userId == 0 ? 1 : userId,
-                      bookId == 0 ? 1 : bookId,
+                      _epubReaderController.userId == 0 ? 1 : _epubReaderController.userId,
+                      _epubReaderController.bookId == 0 ? 1 : _epubReaderController.bookId,
                       chapter,
                       paragraph,
                       startindex,
@@ -422,7 +420,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   _currentChapter = value?.chapterNumber ?? 0;
                   if (!kIsWeb) _showPageNumber();
 
-                  if (bookId == 4 &&
+                  if (_epubReaderController.bookId == 4 &&
                       _currentChapter != 0 &&
                       !_hasAnsweredQuestion(_questionsByChapter[_currentChapter]!.first.id)) {
                     setState(() {
@@ -463,9 +461,9 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
           chapterValue: _currentChapterValue,
           epubReaderController: _epubReaderController,
           onBookmarkAdded: _updateBookmarks,
-          bookId: bookId,
-          userId: userId,
-          chapterStartIndices: _chapterStartIndices,
+          bookId: _epubReaderController.bookId,
+          userId: _epubReaderController.userId,
+          chapterStartIndices: _epubReaderController.chapterStartIndices,
         );
       default:
         return Container();
@@ -480,7 +478,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       } else {
         _showQuiz = false;
         _currentQuestionIndex = 0;
-        final startIndex = _chapterStartIndices[_currentChapterValue?.chapter?.Title];
+        final startIndex =
+            _epubReaderController.chapterStartIndices[_currentChapterValue?.chapter?.Title];
         if (startIndex != null) {
           _epubReaderController.jumpTo(index: startIndex, alignment: 0);
         }
@@ -505,8 +504,12 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   }
 
   _getInfoPopular() async {
-    final bookmarks = await getBookmarks(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
-    final highlights = await getHighlights(userId == 0 ? 1 : userId, bookId == 0 ? 1 : bookId);
+    final bookmarks = await getBookmarks(
+        _epubReaderController.userId == 0 ? 1 : _epubReaderController.userId,
+        _epubReaderController.bookId == 0 ? 1 : _epubReaderController.bookId);
+    final highlights = await getHighlights(
+        _epubReaderController.userId == 0 ? 1 : _epubReaderController.userId,
+        _epubReaderController.bookId == 0 ? 1 : _epubReaderController.bookId);
     setState(() {
       bookmarksinfo = bookmarks;
       highlightsinfo = highlights;
@@ -555,7 +558,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   Future<int?> getLocationData() async {
     try {
-      List<LocatorModel> locatorList = await getLocatorData(userId, bookId);
+      List<LocatorModel> locatorList =
+          await getLocatorData(_epubReaderController.userId, _epubReaderController.bookId);
       LocatorModel? locator = locatorList.firstOrNull;
       var index = locator?.lastIndex;
       print('GET Locator Index ==== $index');
@@ -569,8 +573,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   void postLocationData(int? index) async {
     try {
       Map<String, dynamic> locatorMap = {};
-      locatorMap[CommonModelKeys.bookId] = bookId;
-      locatorMap[CommonModelKeys.userId] = userId;
+      locatorMap[CommonModelKeys.bookId] = _epubReaderController.bookId;
+      locatorMap[CommonModelKeys.userId] = _epubReaderController.userId;
       locatorMap[LocatorModelKeys.lastIndex] = index;
       var result = await postLocatorData(locatorMap);
       print('POST Locator return ==== $result');
