@@ -14,8 +14,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 export 'package:epubx/epubx.dart' hide Image;
 
-export 'utils/context_menu_stub.dart'
-    if (dart.library.html) 'utils/context_menu_web.dart';
+export 'utils/context_menu_stub.dart' if (dart.library.html) 'utils/context_menu_web.dart';
 
 part '../epub_controller.dart';
 part '../helpers/epub_view_builders.dart';
@@ -113,8 +112,7 @@ class _EpubViewState extends State<EpubView> {
       return true;
     }
     _chapters = parseChapters(_controller._document!);
-    final parseParagraphsResult =
-        parseParagraphs(_chapters, _controller._document!.Content);
+    final parseParagraphsResult = parseParagraphs(_chapters, _controller._document!.Content);
     _paragraphs = parseParagraphsResult.flatParagraphs;
     _chapterIndexes.addAll(parseParagraphsResult.chapterIndexes);
 
@@ -130,8 +128,7 @@ class _EpubViewState extends State<EpubView> {
   }
 
   void _changeListener() {
-    if (_paragraphs.isEmpty ||
-        _itemPositionListener!.itemPositions.value.isEmpty) {
+    if (_paragraphs.isEmpty || _itemPositionListener!.itemPositions.value.isEmpty) {
       return;
     }
     final position = _itemPositionListener!.itemPositions.value.first;
@@ -235,12 +232,10 @@ class _EpubViewState extends State<EpubView> {
       return;
     } else {
       final paragraph = _paragraphByIdRef(hrefIdRef);
-      final chapter =
-          paragraph != null ? _chapters[paragraph.chapterIndex] : null;
+      final chapter = paragraph != null ? _chapters[paragraph.chapterIndex] : null;
 
       if (chapter != null && paragraph != null) {
-        final paragraphIndex =
-            _epubCfiReader?.getParagraphIndexByElement(paragraph.element);
+        final paragraphIndex = _epubCfiReader?.getParagraphIndexByElement(paragraph.element);
         final cfi = _epubCfiReader?.generateCfi(
           book: _controller._document,
           chapter: chapter,
@@ -254,18 +249,15 @@ class _EpubViewState extends State<EpubView> {
     }
   }
 
-  Paragraph? _paragraphByIdRef(String idRef) =>
-      _paragraphs.firstWhereOrNull((paragraph) {
+  Paragraph? _paragraphByIdRef(String idRef) => _paragraphs.firstWhereOrNull((paragraph) {
         if (paragraph.element.id == idRef) {
           return true;
         }
 
-        return paragraph.element.children.isNotEmpty &&
-            paragraph.element.children[0].id == idRef;
+        return paragraph.element.children.isNotEmpty && paragraph.element.children[0].id == idRef;
       });
 
-  EpubChapter? _chapterByFileName(String? fileName) =>
-      _chapters.firstWhereOrNull((chapter) {
+  EpubChapter? _chapterByFileName(String? fileName) => _chapters.firstWhereOrNull((chapter) {
         if (fileName != null) {
           if (chapter.ContentFileName!.contains(fileName)) {
             return true;
@@ -377,18 +369,19 @@ class _EpubViewState extends State<EpubView> {
           builders.chapterDividerBuilder(chapters[chapterIndex]),
         GestureDetector(
           onSecondaryTapDown: (details) {
-            if (_selectedText?.isNotEmpty ?? false) {
+            if ((_selectedText?.isNotEmpty ?? false) && kIsWeb) {
               _showContextMenu(
-                  context,
-                  details.globalPosition,
-                  onSelectedChanged,
-                  paragraphIndex,
-                  chapterIndex,
-                  index,
-                  builders,
-                  paragraphs,
-                  document,
-                  onHighlight);
+                context,
+                details.globalPosition,
+                onSelectedChanged,
+                paragraphIndex,
+                chapterIndex,
+                index,
+                builders,
+                paragraphs,
+                document,
+                onHighlight,
+              );
             }
           },
           child: SelectionArea(
@@ -445,10 +438,8 @@ class _EpubViewState extends State<EpubView> {
                 TagExtension(
                   tagsToExtend: {"img"},
                   builder: (imageContext) {
-                    final url =
-                        imageContext.attributes['src']!.replaceAll('../', '');
-                    final content = Uint8List.fromList(
-                        document.Content!.Images![url]!.Content!);
+                    final url = imageContext.attributes['src']!.replaceAll('../', '');
+                    final content = Uint8List.fromList(document.Content!.Images![url]!.Content!);
                     return Image(
                       image: MemoryImage(content),
                     );
@@ -473,8 +464,7 @@ class _EpubViewState extends State<EpubView> {
       paragraphs,
       document,
       onHighlight) {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
@@ -487,7 +477,7 @@ class _EpubViewState extends State<EpubView> {
       items: [
         PopupMenuItem(
           value: 'Marcar Texto',
-          child: const Text('Marcar Texto 1'),
+          child: const Text('Marcar Texto'),
           onTap: () {
             onHighlight();
             print('teste');
@@ -522,26 +512,26 @@ class _EpubViewState extends State<EpubView> {
     return ScrollConfiguration(
       behavior: _ScrollbarBehavior(),
       child: ScrollablePositionedList.builder(
-      shrinkWrap: widget.shrinkWrap,
-      initialScrollIndex: _epubCfiReader!.paragraphIndexByCfiFragment ?? 0,
-      itemCount: _paragraphs.length,
-      itemScrollController: _itemScrollController,
-      itemPositionsListener: _itemPositionListener,
-      itemBuilder: (BuildContext context, int index) {
-        return widget.builders.chapterBuilder(
-          context,
-          widget.builders,
-          widget.controller._document!,
-          _chapters,
-          _paragraphs,
-          index,
-          _getChapterIndexBy(positionIndex: index),
-          _getParagraphIndexBy(positionIndex: index),
-          _onLinkPressed,
-          _onSelectionChanged,
-          _onTextToSpeech,
-          _onHighlight,
-        );
+        shrinkWrap: widget.shrinkWrap,
+        initialScrollIndex: _epubCfiReader!.paragraphIndexByCfiFragment ?? 0,
+        itemCount: _paragraphs.length,
+        itemScrollController: _itemScrollController,
+        itemPositionsListener: _itemPositionListener,
+        itemBuilder: (BuildContext context, int index) {
+          return widget.builders.chapterBuilder(
+            context,
+            widget.builders,
+            widget.controller._document!,
+            _chapters,
+            _paragraphs,
+            index,
+            _getChapterIndexBy(positionIndex: index),
+            _getParagraphIndexBy(positionIndex: index),
+            _onLinkPressed,
+            _onSelectionChanged,
+            _onTextToSpeech,
+            _onHighlight,
+          );
         },
       ),
     );
@@ -601,10 +591,11 @@ class _EpubViewState extends State<EpubView> {
 
 class _ScrollbarBehavior extends ScrollBehavior {
   @override
-  Widget buildScrollbar(
-
-      BuildContext context, Widget child, ScrollableDetails details) {
-
-    return Scrollbar(child: child, controller: details.controller,interactive: true,);
+  Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) {
+    return Scrollbar(
+      controller: details.controller,
+      interactive: true,
+      child: child,
+    );
   }
 }
