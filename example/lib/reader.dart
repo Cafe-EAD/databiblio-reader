@@ -402,7 +402,9 @@ class _ReaderScreenState extends State<ReaderScreen>
                 onChapterChanged: (value) {
                   postLocationData(value?.position.index);
                   _currentChapter = value?.chapterNumber ?? 0;
-                  if (_currentChapter != 0 &&
+
+                  if (bookId == 4 &&
+                      _currentChapter != 0 &&
                       !_hasAnsweredQuestion(
                           _questionsByChapter[_currentChapter]!.first.id)) {
                     setState(() {
