@@ -114,7 +114,7 @@ class _ReaderScreenState extends State<ReaderScreen>
   void initState() {
     _initPrefs();
     if (kIsWeb) preventContextMenu();
-    
+
     _tabController = TabController(length: 2, vsync: this);
 
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
@@ -265,12 +265,24 @@ class _ReaderScreenState extends State<ReaderScreen>
           child: EpubViewTableOfContents(
             controller: _epubReaderController,
             itemBuilder: (context, index, chapter, itemCount) {
-              return ListTile(
-                  title: Text(chapter.title!.trim()),
-                  onTap: () => {
-                        _epubReaderController.scrollTo(
-                            index: chapter.startIndex),
-                      });
+              return EpubViewActualChapter(
+                controller: _epubReaderController,
+                builder: (chapterAtual) {
+                  return Container(
+                    color: chapterAtual!.chapterNumber == (index + 1)
+                        ? Theme.of(context).primaryColor
+                        : null,
+                    child: ListTile(
+                        title: Text(chapter.title!.trim()),
+                        onTap: () => {
+                              setState(() {
+                                _epubReaderController.scrollTo(
+                                    index: chapter.startIndex);
+                              })
+                            }),
+                  );
+                },
+              );
             },
           ),
         ),
@@ -300,7 +312,6 @@ class _ReaderScreenState extends State<ReaderScreen>
                 builders: EpubViewBuilders(
                   options: _builderOptions,
                   chapterDividerBuilder: (_) => const Divider(),
-                  
                 ),
                 controller: _epubReaderController,
               ),

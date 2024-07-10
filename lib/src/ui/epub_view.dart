@@ -460,26 +460,29 @@ class _EpubViewState extends State<EpubView> {
   }
 
   Widget _buildLoaded(BuildContext context) {
-    return ScrollablePositionedList.builder(
-      shrinkWrap: widget.shrinkWrap,
-      initialScrollIndex: _epubCfiReader!.paragraphIndexByCfiFragment ?? 0,
-      itemCount: _paragraphs.length,
-      itemScrollController: _itemScrollController,
-      itemPositionsListener: _itemPositionListener,
-      itemBuilder: (BuildContext context, int index) {
-        return widget.builders.chapterBuilder(
-            context,
-            widget.builders,
-            widget.controller._document!,
-            _chapters,
-            _paragraphs,
-            index,
-            _getChapterIndexBy(positionIndex: index),
-            _getParagraphIndexBy(positionIndex: index),
-            _onLinkPressed,
-            _onSelectionChanged,
-            _onTextToSpeech);
-      },
+    return ScrollConfiguration(
+      behavior: _ScrollbarBehavior(),
+      child: ScrollablePositionedList.builder(
+        shrinkWrap: widget.shrinkWrap,
+        initialScrollIndex: _epubCfiReader!.paragraphIndexByCfiFragment ?? 0,
+        itemCount: _paragraphs.length,
+        itemScrollController: _itemScrollController,
+        itemPositionsListener: _itemPositionListener,
+        itemBuilder: (BuildContext context, int index) {
+          return widget.builders.chapterBuilder(
+              context,
+              widget.builders,
+              widget.controller._document!,
+              _chapters,
+              _paragraphs,
+              index,
+              _getChapterIndexBy(positionIndex: index),
+              _getParagraphIndexBy(positionIndex: index),
+              _onLinkPressed,
+              _onSelectionChanged,
+              _onTextToSpeech);
+        },
+      ),
     );
   }
 
@@ -532,5 +535,15 @@ class _EpubViewState extends State<EpubView> {
       _buildLoaded,
       _loadingError,
     );
+  }
+}
+
+class _ScrollbarBehavior extends ScrollBehavior {
+  @override
+  Widget buildScrollbar(
+
+      BuildContext context, Widget child, ScrollableDetails details) {
+
+    return Scrollbar(child: child, controller: details.controller,interactive: true,);
   }
 }
