@@ -422,6 +422,10 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   },
                 )
               : EpubView(
+                builders: EpubViewBuilders(
+                    options: _builderOptions,
+                    chapterDividerBuilder: (_) => const Divider(),
+                  ),
                 controller: _epubReaderController,
                   onChapterChanged: (value) {
                     postLocationData(value?.position.index);
