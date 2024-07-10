@@ -52,7 +52,6 @@ class _ReaderScreenState extends State<ReaderScreen>
   List<BookmarkModel> bookmarks = [];
   List<BookmarkModel> bookmarksinfo = [];
   List<HighlightModel> highlightsinfo = [];
-  final TextEditingController _searchController = TextEditingController();
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
   bool _isBookmarkMarked = false;
   bool _showSearchField = false;
