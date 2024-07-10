@@ -4,17 +4,13 @@ import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
+import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
-import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
-import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
-
-//import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:epub_view/src/data/models/paragraph.dart' as epub_paragraph;
 
@@ -122,6 +118,7 @@ class _ReaderScreenState extends State<ReaderScreen>
   void initState() {
     _initPrefs();
     if (kIsWeb) preventContextMenu();
+
     _tabController = TabController(length: 2, vsync: this);
 
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
@@ -380,7 +377,17 @@ class _ReaderScreenState extends State<ReaderScreen>
           ],
         ),
         drawer: Drawer(
-          child: EpubViewTableOfContents(controller: _epubReaderController),
+          child: EpubViewTableOfContents(
+            controller: _epubReaderController,
+            itemBuilder: (context, index, chapter, itemCount) {
+              return ListTile(
+                  title: Text(chapter.title!.trim()),
+                  onTap: () => {
+                        _epubReaderController.scrollTo(
+                            index: chapter.startIndex),
+                      });
+            },
+          ),
         ),
         body: _showQuiz
             ? QuizModal(
