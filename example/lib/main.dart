@@ -98,9 +98,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         darkTheme: ThemeData(
           brightness: Brightness.dark,
         ),
-        themeMode: _themeMode,
+        themeMode: ThemeMode.light,
         debugShowCheckedModeBanner: false,
-        home: ReaderScreen(onToggleTheme: _toggleTheme, book: book),
+        home: ReaderScreen(book: book),
         builder: (context, widget) {
           widget = _getMenu(widget);
           return widget!;

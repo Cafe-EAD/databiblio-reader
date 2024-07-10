@@ -21,13 +21,10 @@ import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
 
 class ReaderScreen extends StatefulWidget {
-  final Function(bool) onToggleTheme;
-
   final Future<EpubBook> book;
 
   const ReaderScreen({
     Key? key,
-    required this.onToggleTheme,
     required this.book,
   }) : super(key: key);
 
@@ -171,214 +168,194 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     });
   }
 
+  ThemeMode _themeMode = ThemeMode.system;
+  void toggleTheme(bool isDark) {
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-        floatingActionButton: AnimatedBuilder(
-          animation: Listenable.merge([
-            _epubReaderController.currentPage,
-            _epubReaderController.isPageNumberVisible,
-          ]),
-          builder: (_, __) {
-            return AnimatedOpacity(
-              duration: const Duration(milliseconds: 400),
-              opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
+  Widget build(BuildContext context) => Theme(
+        data: _themeMode == ThemeMode.dark ? ThemeData.dark() : ThemeData.light(),
+        child: Scaffold(
+          floatingActionButton: AnimatedBuilder(
+            animation: Listenable.merge([
+              _epubReaderController.currentPage,
+              _epubReaderController.isPageNumberVisible,
+            ]),
+            builder: (_, __) {
+              return AnimatedOpacity(
+                duration: const Duration(milliseconds: 400),
+                // opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
+                opacity: 1,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Página ${_epubReaderController.currentPage.value}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
-                child: Text(
-                  'Página ${_epubReaderController.currentPage.value}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            );
-          },
-        ),
-        appBar: AppBar(
-          title: EpubViewActualChapter(
-            controller: _epubReaderController,
-            builder: (chapterValue) {
-              return Text(
-                chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-                textAlign: TextAlign.start,
               );
             },
           ),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.bookmark),
-              color: Theme.of(context).colorScheme.onBackground,
-              onPressed: () async {
-                await _getInfoPopular();
-                setState(() {
-                  _showSearchField = !_showSearchField;
-                  _bottomSheetState = 1;
-                });
+          appBar: AppBar(
+            title: EpubViewActualChapter(
+              controller: _epubReaderController,
+              builder: (chapterValue) {
+                return Text(
+                  chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+                  textAlign: TextAlign.start,
+                );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.format_size),
-              onPressed: () => showCustomModalBottomSheet(
-                  context,
-                  widget.onToggleTheme,
-                  _changeFontSize,
-                  _builderOptions,
-                  _changeFontFamily,
-                  ThemeMode.system == ThemeMode.dark),
-            ),
-            AnimSearchBar(
-              width: 300,
-              textController: textController,
-              onSuffixTap: () {
-                setState(() {
-                  textController.clear();
-                });
-              },
-              onSubmitted: (busca) async {
-                await searchMatch.busca(busca, context);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.assistant_rounded),
-              onPressed: () {
-                _epubReaderController.allParagraphs = _epubReaderController.getAllParagraphs();
-
-                if (_epubReaderController.selectedText != null) {
-                  print(_epubReaderController.selectedText);
-                  // Encontre o parágrafo correspondente ao texto selecionado
-                  final selectedParagraph = _epubReaderController.allParagraphs.firstWhereOrNull(
-                    (paragraph) {
-                      String paragraphText = paragraph.element.text.replaceAll('\n', ' ');
-                      // print(_epubReaderController.selectedText);
-                      // print(paragraphText);
-                      // print('>>>>>>>>>>>>>>>>');
-
-                      if (paragraphText.contains(_epubReaderController.selectedText!)) {
-                        return true;
-                      } else {
-                        return false;
-                      }
-                    },
-                  );
-
-                  if (selectedParagraph != null) {
-                    // Obter o número do capítulo
-                    int chapterIndex =
-                        _epubReaderController.currentValueListenable.value!.chapterNumber;
-                    print('chapter: $chapterIndex');
-                    // Obter o nó do parágrafo
-                    final paragraphNode = selectedParagraph.element;
-                    // print('paragraph: ${paragraphNode.outerHtml}');
-                    final nodeIndex = paragraphNode.nodes.indexWhere((node) =>
-                        node.text!.trim().contains(_epubReaderController.selectedText!.trim()));
-                    print('nodeIndex: $nodeIndex');
-                    // Obter o startIndex
-                    final startIndex = _epubReaderController.chapterStartIndices[
-                        _epubReaderController.currentValueListenable.value?.chapter?.Title ?? ''];
-                    print('startIndex: $startIndex');
-                    // Obter o comprimento do texto selecionado
-                    final selectionLength = _epubReaderController.selectedText!.length;
-                    print('selectionLength: $selectionLength');
-
-                    // Declarar as variáveis antes de usá-las
-                    final chapter = chapterIndex.toString();
-                    final paragraph = nodeIndex.toString();
-                    final startindex = startIndex.toString();
-                    final selectionlength = selectionLength.toString();
-                    final highlightedText = _epubReaderController.selectedText.toString();
-
-                    postHighlight(
-                      _epubReaderController.userId == 0 ? 1 : _epubReaderController.userId,
-                      _epubReaderController.bookId == 0 ? 1 : _epubReaderController.bookId,
-                      chapter,
-                      paragraph,
-                      startindex,
-                      selectionlength,
-                      highlightedText,
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Highligth salvo com sucesso!')),
-                    );
-                  } else {
-                    print('Parágrafo selecionado não encontrado.');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Highligth não foi salvo')),
-                    );
-                  }
-
-                  // print(allParagraphs);
-                  //   if (_epubReaderController.selectedText != null &&
-                  //       _epubReaderController.generateEpubCfi() != null &&
-                  //       _epubReaderController.currentValueListenable.value !=
-                  //           null) {
-                  //     HighlightModel(
-                  //             value: _epubReaderController
-                  //                 .currentValueListenable.value,
-                  //             selectedText: _epubReaderController.selectedText,
-                  //             cfi: _epubReaderController.generateEpubCfi())
-                  //         .printar();
-                  //   }
-                }
-              },
-            ),
-          ],
-        ),
-        drawer: Drawer(
-          child: EpubViewTableOfContents(
-            controller: _epubReaderController,
-            itemBuilder: (context, index, chapter, itemCount) {
-              return EpubViewActualChapter(
-                controller: _epubReaderController,
-                builder: (chapterAtual) {
-                  return Container(
-                    color: chapterAtual!.chapterNumber == (index + 1)
-                        ? Theme.of(context).primaryColor
-                        : null,
-                    child: ListTile(
-                        title: Text(chapter.title!.trim()),
-                        onTap: () => {
-                              setState(() {
-                                _epubReaderController.scrollTo(index: chapter.startIndex);
-                              })
-                            }),
-                  );
+            actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.bookmark),
+                color: Theme.of(context).colorScheme.onBackground,
+                onPressed: () async {
+                  await _getInfoPopular();
+                  setState(() {
+                    _showSearchField = !_showSearchField;
+                    _bottomSheetState = 1;
+                  });
                 },
-              );
-            },
-          ),
-        ),
-        body: _showQuiz
-            ? QuizModal(
-                question: _questionsByChapter[_currentChapter]![_currentQuestionIndex],
-                onCorrectAnswer: () {
-                  _onCorrectAnswer(_questionsByChapter[_currentChapter]![_currentQuestionIndex]);
-                },
-              )
-            : EpubView(
-                onChapterChanged: (value) {
-                  postLocationData(value?.position.index);
-                  _currentChapter = value?.chapterNumber ?? 0;
-                  if (!kIsWeb) _showPageNumber();
-
-                  if (_epubReaderController.bookId == 4 &&
-                      _currentChapter != 0 &&
-                      !_hasAnsweredQuestion(_questionsByChapter[_currentChapter]!.first.id)) {
-                    setState(() {
-                      _currentChapterValue = value;
-                      _showQuiz = true;
-                      _currentQuestionIndex = 0;
-                    });
-                  }
-                },
-                builders: EpubViewBuilders(
-                  options: _builderOptions,
-                  chapterDividerBuilder: (_) => const Divider(),
-                ),
-                controller: _epubReaderController,
               ),
-        bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+              IconButton(
+                icon: const Icon(Icons.format_size),
+                onPressed: () => showCustomModalBottomSheet(context, toggleTheme, _changeFontSize,
+                    _builderOptions, _changeFontFamily, ThemeMode.system == ThemeMode.dark),
+              ),
+              AnimSearchBar(
+                width: 300,
+                textController: textController,
+                onSuffixTap: () {
+                  setState(() {
+                    textController.clear();
+                  });
+                },
+                onSubmitted: (busca) async {
+                  await searchMatch.busca(busca, context);
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.assistant_rounded),
+                onPressed: () {
+                  _epubReaderController.allParagraphs = _epubReaderController.getAllParagraphs();
+
+                  if (_epubReaderController.selectedText != null) {
+                    print(_epubReaderController.selectedText);
+                    // Encontre o parágrafo correspondente ao texto selecionado
+                    final selectedParagraph = _epubReaderController.allParagraphs.firstWhereOrNull(
+                      (paragraph) {
+                        String paragraphText = paragraph.element.text.replaceAll('\n', ' ');
+                        // print(_epubReaderController.selectedText);
+                        // print(paragraphText);
+                        // print('>>>>>>>>>>>>>>>>');
+
+                        if (paragraphText.contains(_epubReaderController.selectedText!)) {
+                          return true;
+                        } else {
+                          return false;
+                        }
+                      },
+                    );
+
+                    if (selectedParagraph != null) {
+                      int chapterIndex =
+                          _epubReaderController.currentValueListenable.value!.chapterNumber;
+                      final paragraphNode = selectedParagraph.element;
+                      final nodeIndex = paragraphNode.nodes.indexWhere((node) =>
+                          node.text!.trim().contains(_epubReaderController.selectedText!.trim()));
+                      final startIndex = _epubReaderController.chapterStartIndices[
+                          _epubReaderController.currentValueListenable.value?.chapter?.Title ?? ''];
+                      final selectionLength = _epubReaderController.selectedText!.length;
+                      final chapter = chapterIndex.toString();
+                      final paragraph = nodeIndex.toString();
+                      final startindex = startIndex.toString();
+                      final selectionlength = selectionLength.toString();
+                      final highlightedText = _epubReaderController.selectedText.toString();
+
+                      postHighlight(
+                        _epubReaderController.userId == 0 ? 1 : _epubReaderController.userId,
+                        _epubReaderController.bookId == 0 ? 1 : _epubReaderController.bookId,
+                        chapter,
+                        paragraph,
+                        startindex,
+                        selectionlength,
+                        highlightedText,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Highligth salvo com sucesso!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Highligth não foi salvo')),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+          drawer: Drawer(
+            child: EpubViewTableOfContents(
+              controller: _epubReaderController,
+              itemBuilder: (context, index, chapter, itemCount) {
+                return EpubViewActualChapter(
+                  controller: _epubReaderController,
+                  builder: (chapterAtual) {
+                    return Container(
+                      color: chapterAtual!.chapterNumber == (index + 1)
+                          ? Theme.of(context).primaryColor
+                          : null,
+                      child: ListTile(
+                          title: Text(chapter.title!.trim()),
+                          onTap: () => {
+                                setState(() {
+                                  _epubReaderController.scrollTo(index: chapter.startIndex);
+                                })
+                              }),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          body: _showQuiz
+              ? QuizModal(
+                  question: _questionsByChapter[_currentChapter]![_currentQuestionIndex],
+                  onCorrectAnswer: () {
+                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![_currentQuestionIndex]);
+                  },
+                )
+              : EpubView(
+                  builders: EpubViewBuilders(
+                    options: _builderOptions,
+                    chapterDividerBuilder: (_) => const Divider(),
+                  ),
+                  controller: _epubReaderController,
+                  onChapterChanged: (value) {
+                    postLocationData(value?.position.index);
+                    _currentChapter = value?.chapterNumber ?? 0;
+                    _epubReaderController.updateCurrentPage();
+                    // if (!kIsWeb) _showPageNumber();
+
+                    if (_epubReaderController.bookId == 4 &&
+                        _currentChapter != 0 &&
+                        !_hasAnsweredQuestion(_questionsByChapter[_currentChapter]!.first.id)) {
+                      setState(() {
+                        _currentChapterValue = value;
+                        _showQuiz = true;
+                        _currentQuestionIndex = 0;
+                      });
+                    }
+                  },
+                ),
+          bottomSheet: _showSearchField ? _getShowContainer() : const SizedBox.shrink(),
+        ),
       );
 
   Widget _getShowContainer() {
