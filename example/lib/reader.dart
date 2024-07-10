@@ -279,18 +279,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
               },
             ),
             IconButton(
-              icon: const Icon(Icons.save_alt),
-              onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
-            ),
-            IconButton(
-              icon: const Icon(Icons.remove),
-              onPressed: () => _changeFontSize(20),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _changeFontFamily(),
-            ),
-            IconButton(
               icon: const Icon(Icons.format_size),
               onPressed: () => showCustomModalBottomSheet(
                   context,
