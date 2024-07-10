@@ -6,15 +6,10 @@ import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/question.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
-import 'package:fl_toast/fl_toast.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
-import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
-
-//import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'model/highlight_model.dart';
@@ -119,20 +114,12 @@ class _ReaderScreenState extends State<ReaderScreen>
   void initState() {
     _initPrefs();
     if (kIsWeb) preventContextMenu();
+    
     _tabController = TabController(length: 2, vsync: this);
-   
+
     userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
     bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
-
-    // _epubReaderController = EpubController(
-    //   document: EpubDocument.openAsset(
-    //     kDebugMode
-    //         ? 'assets/burroughs-mucker.epub'
-    //         : '$contextId/$revision/$bookName',
-    //   ),
-    // );
-
-        _epubReaderController = EpubController(
+    _epubReaderController = EpubController(
       document: widget.book,
     );
 
@@ -214,8 +201,6 @@ class _ReaderScreenState extends State<ReaderScreen>
     _flutterTts.setPitch(pitch);
   }
 
-  
-
   @override
   void dispose() {
     _epubReaderController.dispose();
@@ -237,18 +222,6 @@ class _ReaderScreenState extends State<ReaderScreen>
           ),
           actions: <Widget>[
             IconButton(
-              icon: const Icon(Icons.save_alt),
-              onPressed: () => _speak(_epubReaderController.selectedText ?? ""),
-            ),
-            IconButton(
-              icon: const Icon(Icons.remove),
-              onPressed: () => _changeFontSize(20),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _changeFontFamily(),
-            ),
-            IconButton(
               icon: const Icon(Icons.format_size),
               onPressed: () => showCustomModalBottomSheet(
                   context,
@@ -256,7 +229,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                   _changeFontSize,
                   _builderOptions,
                   _changeFontFamily,
-                  ThemeMode.system==ThemeMode.dark),
+                  ThemeMode.system == ThemeMode.dark),
             ),
             AnimSearchBar(
               width: 300,
@@ -289,7 +262,17 @@ class _ReaderScreenState extends State<ReaderScreen>
           ],
         ),
         drawer: Drawer(
-          child: EpubViewTableOfContents(controller: _epubReaderController),
+          child: EpubViewTableOfContents(
+            controller: _epubReaderController,
+            itemBuilder: (context, index, chapter, itemCount) {
+              return ListTile(
+                  title: Text(chapter.title!.trim()),
+                  onTap: () => {
+                        _epubReaderController.scrollTo(
+                            index: chapter.startIndex),
+                      });
+            },
+          ),
         ),
         body: _showQuiz
             ? QuizModal(
@@ -304,7 +287,6 @@ class _ReaderScreenState extends State<ReaderScreen>
                 onChapterChanged: (value) {
                   postLocationData(value?.position.index);
                   _currentChapter = value?.chapterNumber ?? 0;
-                  // Verifica se o capítulo mudou e se há perguntas não respondidas no novo capítulo
                   if (_currentChapter != 0 &&
                       !_hasAnsweredQuestion(
                           _questionsByChapter[_currentChapter]!.first.id)) {
@@ -318,6 +300,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 builders: EpubViewBuilders(
                   options: _builderOptions,
                   chapterDividerBuilder: (_) => const Divider(),
+                  
                 ),
                 controller: _epubReaderController,
               ),
@@ -357,9 +340,6 @@ class _ReaderScreenState extends State<ReaderScreen>
     final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
     return answeredQuestions.contains(questionId.toString());
   }
-
-
-
 
   _getInfoBookMark() async {
     try {
@@ -416,7 +396,7 @@ class _ReaderScreenState extends State<ReaderScreen>
     });
   }
 
-Future<void> _speak(String text) async {
+  Future<void> _speak(String text) async {
     if (text.isNotEmpty) {
       await _flutterTts.speak(text);
     }
