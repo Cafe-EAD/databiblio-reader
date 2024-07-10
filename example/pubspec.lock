@@ -110,7 +110,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "9592d01abbc888940bd3ed634245882b84dd370b"
+      resolved-ref: "4515d1402ce2605bbd552f18da8d1ce9a40c8f0c"
       url: "https://github.com/Cafe-EAD/databiblio-reader.git"
     source: git
     version: "3.2.0"
@@ -189,7 +189,7 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_tts:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: flutter_tts
       sha256: aed2a00c48c43af043ed81145fd8503ddd793dafa7088ab137dbef81a703e53d

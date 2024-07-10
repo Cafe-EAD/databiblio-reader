@@ -11,6 +11,7 @@ import 'package:epub_view/src/network/rest.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 export 'package:epubx/epubx.dart' hide Image;
@@ -25,9 +26,11 @@ const _minLeadingEdge = -0.05;
 
 typedef ExternalLinkPressed = void Function(String href);
 typedef OnSelectedChanged = void Function(String? selection);
-typedef OnTextToSpeech = void Function();
+typedef OnTextToSpeech = void Function(String text);
 typedef OnHighlight = void Function(String text); //TODO
 int? index;
+
+enum TtsState { playing, stopped, paused, continued }
 
 class EpubView extends StatefulWidget {
   const EpubView({
@@ -75,11 +78,19 @@ class _EpubViewState extends State<EpubView> {
   static String? _selectedText = '';
   Timer? _pageNumberTimer;
   static const int _pageNumberDuration = 2000;
+
+  late FlutterTts _flutterTts;
+  TtsState ttsState = TtsState.stopped;
+  double volume = 0.5;
+  double pitch = 1.0;
+  double rate = 0.5;
+
   EpubController get _controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
+    _initTts();
     _itemScrollController = ItemScrollController();
     _itemPositionListener = ItemPositionsListener.create();
     _controller._attach(this);
@@ -101,10 +112,61 @@ class _EpubViewState extends State<EpubView> {
     });
   }
 
+  void _initTts() {
+    _flutterTts = FlutterTts();
+
+    _flutterTts.setStartHandler(() {
+      setState(() {
+        print("Playing");
+        ttsState = TtsState.playing;
+      });
+    });
+
+    _flutterTts.setCompletionHandler(() {
+      setState(() {
+        print("Complete");
+        ttsState = TtsState.stopped;
+      });
+    });
+
+    _flutterTts.setCancelHandler(() {
+      setState(() {
+        print("Cancel");
+        ttsState = TtsState.stopped;
+      });
+    });
+
+    _flutterTts.setPauseHandler(() {
+      setState(() {
+        print("Paused");
+        ttsState = TtsState.paused;
+      });
+    });
+
+    _flutterTts.setContinueHandler(() {
+      setState(() {
+        print("Continued");
+        ttsState = TtsState.continued;
+      });
+    });
+
+    _flutterTts.setErrorHandler((msg) {
+      setState(() {
+        print("error: $msg");
+        ttsState = TtsState.stopped;
+      });
+    });
+
+    _flutterTts.setVolume(volume);
+    _flutterTts.setSpeechRate(rate);
+    _flutterTts.setPitch(pitch);
+  }
+
   @override
   void dispose() {
     _itemPositionListener!.itemPositions.removeListener(_changeListener);
     _controller._detach();
+    _flutterTts.stop();
     super.dispose();
   }
 
@@ -175,7 +237,11 @@ class _EpubViewState extends State<EpubView> {
     );
   }
 
-  void _onTextToSpeech() {}
+  void _onTextToSpeech(String text) {
+    if (text.isNotEmpty) {
+      _flutterTts.speak(text);
+    }
+  }
 
   void _onHighlight(String? selectedText) {
     _controller.allParagraphs = _controller.getAllParagraphs();
@@ -438,7 +504,7 @@ class _EpubViewState extends State<EpubView> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      onTextToSpeech();
+                      onTextToSpeech(_selectedText ?? "");
                     },
                     child: Container(
                       padding: const EdgeInsets.all(8),

@@ -12,7 +12,6 @@ import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/highlight_model.dart';
@@ -37,17 +36,15 @@ enum TtsState { playing, stopped, paused, continued }
 
 class _ReaderScreenState extends State<ReaderScreen>
     with SingleTickerProviderStateMixin {
+
   late EpubController _epubReaderController;
   late SearchMatch searchMatch;
   TextEditingController textController = TextEditingController();
 
-  late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
+  late int userId;
+  late int bookId;
 
-  TtsState ttsState = TtsState.stopped;
-  double volume = 0.5;
-  double pitch = 1.0;
-  double rate = 0.5;
   bool isDefaultFont = true;
   String defaultFont = "";
   String otherFont = "OpenDyslexic";
@@ -156,63 +153,11 @@ class _ReaderScreenState extends State<ReaderScreen>
     });
 
     super.initState();
-    _initTts();
-  }
-
-  void _initTts() {
-    _flutterTts = FlutterTts();
-
-    _flutterTts.setStartHandler(() {
-      setState(() {
-        print("Playing");
-        ttsState = TtsState.playing;
-      });
-    });
-
-    _flutterTts.setCompletionHandler(() {
-      setState(() {
-        print("Complete");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    _flutterTts.setCancelHandler(() {
-      setState(() {
-        print("Cancel");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    _flutterTts.setPauseHandler(() {
-      setState(() {
-        print("Paused");
-        ttsState = TtsState.paused;
-      });
-    });
-
-    _flutterTts.setContinueHandler(() {
-      setState(() {
-        print("Continued");
-        ttsState = TtsState.continued;
-      });
-    });
-
-    _flutterTts.setErrorHandler((msg) {
-      setState(() {
-        print("error: $msg");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    _flutterTts.setVolume(volume);
-    _flutterTts.setSpeechRate(rate);
-    _flutterTts.setPitch(pitch);
   }
 
   @override
   void dispose() {
     _epubReaderController.dispose();
-    _flutterTts.stop();
     super.dispose();
   }
 
@@ -239,6 +184,7 @@ class _ReaderScreenState extends State<ReaderScreen>
   Widget build(BuildContext context) => Theme(
         data:
             _themeMode == ThemeMode.dark ? ThemeData.dark() : ThemeData.light(),
+
         child: Scaffold(
           floatingActionButton: AnimatedBuilder(
             animation: Listenable.merge([
@@ -250,6 +196,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                 duration: const Duration(milliseconds: 400),
                 opacity:
                     _epubReaderController.isPageNumberVisible.value ? 1 : 0,
+
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -289,13 +236,8 @@ class _ReaderScreenState extends State<ReaderScreen>
               ),
               IconButton(
                 icon: const Icon(Icons.format_size),
-                onPressed: () => showCustomModalBottomSheet(
-                    context,
-                    toggleTheme,
-                    _changeFontSize,
-                    _builderOptions,
-                    _changeFontFamily,
-                    ThemeMode.system == ThemeMode.dark),
+                onPressed: () => showCustomModalBottomSheet(context, toggleTheme, _changeFontSize,
+                    _builderOptions, _changeFontFamily, ThemeMode.system == ThemeMode.dark),
               ),
               AnimSearchBar(
                 width: 300,
@@ -315,6 +257,7 @@ class _ReaderScreenState extends State<ReaderScreen>
                   _epubReaderController.allParagraphs =
                       _epubReaderController.getAllParagraphs();
 
+
                   if (_epubReaderController.selectedText != null) {
                     print(_epubReaderController.selectedText);
                     // Encontre o parágrafo correspondente ao texto selecionado
@@ -329,6 +272,7 @@ class _ReaderScreenState extends State<ReaderScreen>
 
                         if (paragraphText
                             .contains(_epubReaderController.selectedText!)) {
+
                           return true;
                         } else {
                           return false;
@@ -337,35 +281,22 @@ class _ReaderScreenState extends State<ReaderScreen>
                     );
 
                     if (selectedParagraph != null) {
-                      // Obter o número do capítulo
-                      int chapterIndex = _epubReaderController
-                          .currentValueListenable.value!.chapterNumber;
-                      print('chapter: $chapterIndex');
-                      // Obter o nó do parágrafo
-                      final paragraphNode = selectedParagraph.element;
-                      // print('paragraph: ${paragraphNode.outerHtml}');
-                      final nodeIndex = paragraphNode.nodes.indexWhere((node) =>
-                          node.text!.trim().contains(
-                              _epubReaderController.selectedText!.trim()));
-                      print('nodeIndex: $nodeIndex');
-                      // Obter o startIndex
-                      final startIndex = _epubReaderController
-                          .chapterStartIndices[_epubReaderController
-                              .currentValueListenable.value?.chapter?.Title ??
-                          ''];
-                      print('startIndex: $startIndex');
-                      // Obter o comprimento do texto selecionado
-                      final selectionLength =
-                          _epubReaderController.selectedText!.length;
-                      print('selectionLength: $selectionLength');
 
-                      // Declarar as variáveis antes de usá-las
+                      int chapterIndex =
+                          _epubReaderController.currentValueListenable.value!.chapterNumber;
+                      final paragraphNode = selectedParagraph.element;
+                      final nodeIndex = paragraphNode.nodes.indexWhere((node) =>
+                          node.text!.trim().contains(_epubReaderController.selectedText!.trim()));
+                      final startIndex = _epubReaderController.chapterStartIndices[
+                          _epubReaderController.currentValueListenable.value?.chapter?.Title ?? ''];
+                      final selectionLength = _epubReaderController.selectedText!.length;
                       final chapter = chapterIndex.toString();
                       final paragraph = nodeIndex.toString();
                       final startindex = startIndex.toString();
                       final selectionlength = selectionLength.toString();
                       final highlightedText =
                           _epubReaderController.selectedText.toString();
+
 
                       postHighlight(
                         _epubReaderController.userId == 0
@@ -385,25 +316,12 @@ class _ReaderScreenState extends State<ReaderScreen>
                             content: Text('Highligth salvo com sucesso!')),
                       );
                     } else {
-                      print('Parágrafo selecionado não encontrado.');
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                             content: Text('Highligth não foi salvo')),
                       );
                     }
 
-                    // print(allParagraphs);
-                    //   if (_epubReaderController.selectedText != null &&
-                    //       _epubReaderController.generateEpubCfi() != null &&
-                    //       _epubReaderController.currentValueListenable.value !=
-                    //           null) {
-                    //     HighlightModel(
-                    //             value: _epubReaderController
-                    //                 .currentValueListenable.value,
-                    //             selectedText: _epubReaderController.selectedText,
-                    //             cfi: _epubReaderController.generateEpubCfi())
-                    //         .printar();
-                    //   }
                   }
                 },
               ),
@@ -436,11 +354,9 @@ class _ReaderScreenState extends State<ReaderScreen>
           ),
           body: _showQuiz
               ? QuizModal(
-                  question: _questionsByChapter[_currentChapter]![
-                      _currentQuestionIndex],
+                  question: _questionsByChapter[_currentChapter]![_currentQuestionIndex],
                   onCorrectAnswer: () {
-                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![
-                        _currentQuestionIndex]);
+                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![_currentQuestionIndex]);
                   },
                 )
               : EpubView(
@@ -452,7 +368,9 @@ class _ReaderScreenState extends State<ReaderScreen>
                   onChapterChanged: (value) {
                     postLocationData(value?.position.index);
                     _currentChapter = value?.chapterNumber ?? 0;
-                    if (!kIsWeb) _showPageNumber();
+
+                    _epubReaderController.updateCurrentPage();
+                    // if (!kIsWeb) _showPageNumber();
 
                     if (_epubReaderController.bookId == 4 &&
                         _currentChapter != 0 &&
@@ -581,12 +499,6 @@ class _ReaderScreenState extends State<ReaderScreen>
           fontFamily: newFontFamily,
           package: "epub_view");
     });
-  }
-
-  Future<void> _speak(String text) async {
-    if (text.isNotEmpty) {
-      await _flutterTts.speak(text);
-    }
   }
 
   Future<int?> getLocationData() async {

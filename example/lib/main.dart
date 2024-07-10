@@ -14,7 +14,6 @@ import 'package:flutter/foundation.dart';
 //import 'package:epub_view_example/utils/tts_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemChrome, SystemUiOverlayStyle;
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/highlight_model.dart';
