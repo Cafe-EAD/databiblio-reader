@@ -25,7 +25,6 @@ import 'widget/search_match.dart';
 
 void main() => runApp(const MyApp());
 
-enum TtsState { playing, stopped, paused, continued }
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
