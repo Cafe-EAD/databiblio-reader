@@ -519,7 +519,9 @@ class _EpubViewState extends State<EpubView> {
   }
 
   Widget _buildLoaded(BuildContext context) {
-    return ScrollablePositionedList.builder(
+    return ScrollConfiguration(
+      behavior: _ScrollbarBehavior(),
+      child: ScrollablePositionedList.builder(
       shrinkWrap: widget.shrinkWrap,
       initialScrollIndex: _epubCfiReader!.paragraphIndexByCfiFragment ?? 0,
       itemCount: _paragraphs.length,
@@ -540,7 +542,8 @@ class _EpubViewState extends State<EpubView> {
           _onTextToSpeech,
           _onHighlight,
         );
-      },
+        },
+      ),
     );
   }
 
@@ -593,5 +596,15 @@ class _EpubViewState extends State<EpubView> {
       _buildLoaded,
       _loadingError,
     );
+  }
+}
+
+class _ScrollbarBehavior extends ScrollBehavior {
+  @override
+  Widget buildScrollbar(
+
+      BuildContext context, Widget child, ScrollableDetails details) {
+
+    return Scrollbar(child: child, controller: details.controller,interactive: true,);
   }
 }
