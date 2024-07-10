@@ -12,7 +12,6 @@ import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/highlight_model.dart';
@@ -36,20 +35,15 @@ class ReaderScreen extends StatefulWidget {
   State<ReaderScreen> createState() => _ReaderScreenState();
 }
 
-enum TtsState { playing, stopped, paused, continued }
-
 class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderStateMixin {
   late EpubController _epubReaderController;
   late SearchMatch searchMatch;
   TextEditingController textController = TextEditingController();
 
-  late FlutterTts _flutterTts;
   late CustomBuilderOptions _builderOptions;
+  late int userId;
+  late int bookId;
 
-  TtsState ttsState = TtsState.stopped;
-  double volume = 0.5;
-  double pitch = 1.0;
-  double rate = 0.5;
   bool isDefaultFont = true;
   String defaultFont = "";
   String otherFont = "OpenDyslexic";
@@ -157,63 +151,11 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     });
 
     super.initState();
-    _initTts();
-  }
-
-  void _initTts() {
-    _flutterTts = FlutterTts();
-
-    _flutterTts.setStartHandler(() {
-      setState(() {
-        print("Playing");
-        ttsState = TtsState.playing;
-      });
-    });
-
-    _flutterTts.setCompletionHandler(() {
-      setState(() {
-        print("Complete");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    _flutterTts.setCancelHandler(() {
-      setState(() {
-        print("Cancel");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    _flutterTts.setPauseHandler(() {
-      setState(() {
-        print("Paused");
-        ttsState = TtsState.paused;
-      });
-    });
-
-    _flutterTts.setContinueHandler(() {
-      setState(() {
-        print("Continued");
-        ttsState = TtsState.continued;
-      });
-    });
-
-    _flutterTts.setErrorHandler((msg) {
-      setState(() {
-        print("error: $msg");
-        ttsState = TtsState.stopped;
-      });
-    });
-
-    _flutterTts.setVolume(volume);
-    _flutterTts.setSpeechRate(rate);
-    _flutterTts.setPitch(pitch);
   }
 
   @override
   void dispose() {
     _epubReaderController.dispose();
-    _flutterTts.stop();
     super.dispose();
   }
 
@@ -548,12 +490,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
           fontFamily: newFontFamily,
           package: "epub_view");
     });
-  }
-
-  Future<void> _speak(String text) async {
-    if (text.isNotEmpty) {
-      await _flutterTts.speak(text);
-    }
   }
 
   Future<int?> getLocationData() async {
