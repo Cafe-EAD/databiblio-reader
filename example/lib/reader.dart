@@ -20,7 +20,8 @@ import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
 import 'widget/text-to-speech_icon.dart';
-
+  bool disl = false;
+   bool? tema;
 class ReaderScreen extends StatefulWidget {
   final Future<EpubBook> book;
 
@@ -164,7 +165,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       });
     });
   }
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode? _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
     setState(() {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
