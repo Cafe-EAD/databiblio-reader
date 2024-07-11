@@ -227,63 +227,69 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                                     },
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    _getNote(widget
-                                        .bookmarksinfo[
-                                            widget.bookmarksinfo.length -
-                                                index -
-                                                1]
-                                        .note),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _getNote(widget
+                                              .bookmarksinfo[
+                                                  widget.bookmarksinfo.length -
+                                                      index -
+                                                      1]
+                                              .note),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onBackground,
+                                          ),
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            onPressed: () {
+                                              _showNoteDialog(
+                                                context,
+                                                widget.bookmarksinfo[widget
+                                                        .bookmarksinfo.length -
+                                                    index -
+                                                    1],
+                                              );
+                                            },
+                                            icon: Icon(
+                                              Icons.edit,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onBackground,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          IconButton(
+                                            onPressed: () {
+                                              _showDeleteDialog(
+                                                context,
+                                                widget.bookmarksinfo[widget
+                                                        .bookmarksinfo.length -
+                                                    index -
+                                                    1],
+                                              );
+                                            },
+                                            icon: Icon(
+                                              Icons.close,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onBackground,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    _showNoteDialog(
-                                      context,
-                                      widget.bookmarksinfo[
-                                          widget.bookmarksinfo.length -
-                                              index -
-                                              1],
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Icons.edit,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  onPressed: () {
-                                    _showDeleteDialog(
-                                      context,
-                                      widget.bookmarksinfo[
-                                          widget.bookmarksinfo.length -
-                                              index -
-                                              1],
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Icons.close,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                  ),
-                                ),
-                              ],
-                            )
                           ],
                         ),
                       );
