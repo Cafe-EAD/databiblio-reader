@@ -20,6 +20,7 @@ class BookmarkBottomSheet extends StatefulWidget {
   final int bookId;
   final int userId;
   final Map<String, int> chapterStartIndices;
+  final Function(int) onBookmarkTap;
 
   const BookmarkBottomSheet({
     Key? key,
@@ -35,6 +36,7 @@ class BookmarkBottomSheet extends StatefulWidget {
     required this.bookId,
     required this.userId,
     required this.chapterStartIndices,
+    required this.onBookmarkTap,
   }) : super(key: key);
 
   @override
@@ -146,11 +148,19 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
                       return GestureDetector(
-                        onTap: () {
-                          print('object');
-                          setState(() {
-                            // _epubReaderController.scrollTo(index: chapter.startIndex);
-                          });
+                        onTap: () async {
+                          int? startIndex = await _getStartIndexByIndex(
+                              widget.epubReaderController,
+                              widget
+                                  .bookmarksinfo[
+                                      widget.bookmarksinfo.length - index - 1]
+                                  .bookmarkedindex!
+                                  .toInt());
+                          if (startIndex != null) {
+                            widget.onBookmarkTap(startIndex);
+                          } else {
+                            print('startIndex é nulo para o bookmark $index');
+                          }
                         },
                         child: Container(
                           padding: const EdgeInsets.all(16.0),
@@ -587,6 +597,13 @@ Future<String> _getChapterTitleByIndex(
   final epubBook = await controller.document;
   final chapter = epubBook.Chapters![index - 1];
   return chapter.Title ?? 'Título não disponível';
+}
+
+_getStartIndexByIndex(EpubController controller, int index) async {
+  final epubBook = await controller.document;
+  final chapter = epubBook.Chapters![index - 1];
+  final startIndex = controller.chapterStartIndices[chapter.Title];
+  return startIndex;
 }
 
 _getNote(note) {
