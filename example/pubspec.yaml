@@ -20,6 +20,9 @@ dependencies:
   gap: ^3.0.1
   fl_toast: ^3.2.0
   anim_search_bar: ^2.0.3
+  html: ^0.15.4
+  flutter_bloc: ^8.1.6
+  flutter_tts: ^4.0.2
 
 dev_dependencies:
   flutter_test:

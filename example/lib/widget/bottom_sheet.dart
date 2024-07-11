@@ -2,6 +2,8 @@ import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
+import '../reader.dart';
+
 class BottomSheetContent extends StatefulWidget {
   final Function(bool) onToggleTheme;
   final Function(double) changeFontSize;
@@ -22,8 +24,7 @@ class BottomSheetContent extends StatefulWidget {
 }
 
 class _BottomSheetContentState extends State<BottomSheetContent> {
-  bool disl = false;
-   bool? tema;
+
 
   void _updateFontSize(double newFontSize) {
     setState(() {
@@ -60,8 +61,6 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
             ),
             const Gap(10),
             Switch(
-              activeColor: Colors.white,
-              activeTrackColor: Colors.green[300],
               value: disl,
               onChanged: (newValue) {
                 setState(() {
@@ -80,9 +79,6 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
             ),
             const Gap(10),
             Switch(
-              activeColor: Colors.white,
-              activeTrackColor: Colors.indigo,
-              inactiveThumbColor: Colors.amber,
               value: tema??widget.themeMode,
               onChanged: (value) {
                 setState(() {

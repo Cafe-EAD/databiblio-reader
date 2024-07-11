@@ -19,7 +19,9 @@ import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
-
+import 'widget/text-to-speech_icon.dart';
+  bool disl = false;
+   bool? tema;
 class ReaderScreen extends StatefulWidget {
   final Future<EpubBook> book;
 
@@ -99,17 +101,13 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   @override
   void initState() {
     _initPrefs();
+
+
     if (kIsWeb) preventContextMenu();
 
     _tabController = TabController(length: 2, vsync: this);
 
-    // _epubReaderController = EpubController(
-    //   document: EpubDocument.openAsset(
-    //     kDebugMode
-    //         ? 'assets/burroughs-mucker.epub'
-    //         : '$contextId/$revision/$bookName',
-    //   ),
-    // );
+
 
     _epubReaderController = EpubController(
       document: widget.book,
@@ -167,8 +165,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       });
     });
   }
-
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode? _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
     setState(() {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
@@ -230,18 +227,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                 onPressed: () => showCustomModalBottomSheet(context, toggleTheme, _changeFontSize,
                     _builderOptions, _changeFontFamily, ThemeMode.system == ThemeMode.dark),
               ),
-              AnimSearchBar(
-                width: 300,
-                textController: textController,
-                onSuffixTap: () {
-                  setState(() {
-                    textController.clear();
-                  });
-                },
-                onSubmitted: (busca) async {
-                  await searchMatch.busca(busca, context);
-                },
-              ),
               IconButton(
                 icon: const Icon(Icons.assistant_rounded),
                 onPressed: () {
@@ -300,6 +285,20 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   }
                 },
               ),
+             TextToSpeechButton(_epubReaderController),
+              AnimSearchBar(
+                width: 300,
+                textController: textController,
+                onSuffixTap: () {
+                  setState(() {
+                    textController.clear();
+                  });
+                },
+                onSubmitted: (busca) async {
+                  await searchMatch.busca(busca, context);
+                },
+              ),
+              
             ],
           ),
           drawer: Drawer(
