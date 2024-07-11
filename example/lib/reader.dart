@@ -170,7 +170,9 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   ThemeMode _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
+    setState(() {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    });
   }
 
   @override
