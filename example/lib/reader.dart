@@ -170,9 +170,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   ThemeMode _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
-    setState(() {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    });
   }
 
   @override
@@ -385,6 +383,9 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
           bookId: _epubReaderController.bookId,
           userId: _epubReaderController.userId,
           chapterStartIndices: _epubReaderController.chapterStartIndices,
+          onBookmarkTap: (index) {
+            _handleBookmarkTap(index);
+          },
         );
       default:
         return Container();
@@ -439,6 +440,14 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
 
   void _updateBookmarks() {
     _getInfoPopular();
+  }
+
+  void _handleBookmarkTap(int index) {
+      _epubReaderController.jumpTo(index: index, alignment: 0);
+    setState(() {
+      _showSearchField = false;
+      _bottomSheetState = 0;
+    });
   }
 
   /*
