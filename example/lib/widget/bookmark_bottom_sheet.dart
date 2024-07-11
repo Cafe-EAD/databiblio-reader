@@ -42,6 +42,7 @@ class BookmarkBottomSheet extends StatefulWidget {
 }
 
 class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
+  bool _isClickInProgress = false;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -72,45 +73,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () async {
-                    if (widget.bookmarksinfo.any(
-                      (bookmark) =>
-                          bookmark.bookmarkedindex ==
-                          widget
-                              .epubReaderController.currentValue!.chapterNumber,
-                    )) {
-                      try {
-                        // print("Remover");
-                        BookmarkModel bookmarkToRemove =
-                            widget.bookmarksinfo.firstWhere(
-                          (bookmark) =>
-                              bookmark.bookmarkedindex ==
-                              widget.epubReaderController.currentValue!
-                                  .chapterNumber,
-                        );
-                        int bookmarkIdToRemove = bookmarkToRemove.id!;
-                        await deleteBookmark(bookmarkIdToRemove);
-                        widget.onBookmarkAdded();
-                      } catch (e) {
-                        widget.onBookmarkAdded();
-                        print('Erro ao criar bookmark: ${e.toString()}');
-                      }
-                    } else {
-                      // print("Marcar");
-                      try {
-                        await postBookmark(
-                          widget.bookId == 0 ? 1 : widget.bookId,
-                          widget.userId == 0 ? 1 : widget.userId,
-                          widget
-                              .epubReaderController.currentValue!.chapterNumber,
-                        );
-                        widget.onBookmarkAdded();
-                      } catch (e) {
-                        widget.onBookmarkAdded();
-                        print('Erro ao criar bookmark: ${e.toString()}');
-                      }
-                    }
-                  },
+                  onTap: _isClickInProgress ? null : _handleTap,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -564,6 +527,58 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
         );
       },
     );
+  }
+
+  Future<void> _handleTap() async {
+    setState(() {
+      _isClickInProgress = true;
+    });
+
+    if (widget.bookmarksinfo.any(
+      (bookmark) =>
+          bookmark.bookmarkedindex ==
+          widget.epubReaderController.currentValue!.chapterNumber,
+    )) {
+      try {
+        // print("Remover");
+        BookmarkModel bookmarkToRemove = widget.bookmarksinfo.firstWhere(
+          (bookmark) =>
+              bookmark.bookmarkedindex ==
+              widget.epubReaderController.currentValue!.chapterNumber,
+        );
+        int bookmarkIdToRemove = bookmarkToRemove.id!;
+        await deleteBookmark(bookmarkIdToRemove);
+        widget.onBookmarkAdded();
+        setState(() {
+          _isClickInProgress = false;
+        });
+      } catch (e) {
+        widget.onBookmarkAdded();
+        print('Erro ao criar bookmark: ${e.toString()}');
+        setState(() {
+          _isClickInProgress = false;
+        });
+      }
+    } else {
+      // print("Marcar");
+      try {
+        await postBookmark(
+          widget.bookId == 0 ? 1 : widget.bookId,
+          widget.userId == 0 ? 1 : widget.userId,
+          widget.epubReaderController.currentValue!.chapterNumber,
+        );
+        widget.onBookmarkAdded();
+        setState(() {
+          _isClickInProgress = false;
+        });
+      } catch (e) {
+        widget.onBookmarkAdded();
+        print('Erro ao criar bookmark: ${e.toString()}');
+        setState(() {
+          _isClickInProgress = false;
+        });
+      }
+    }
   }
 }
 
