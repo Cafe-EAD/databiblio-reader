@@ -436,6 +436,11 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
     setState(() {
       bookmarksinfo = bookmarks;
       highlightsinfo = highlights;
+      highlightsinfo.sort((a, b) {
+        int chapterA = int.tryParse(a.chapter ?? '0') ?? 0;
+        int chapterB = int.tryParse(b.chapter ?? '0') ?? 0;
+        return chapterA.compareTo(chapterB);
+      });
     });
   }
 
