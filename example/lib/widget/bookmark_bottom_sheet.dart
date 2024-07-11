@@ -182,115 +182,136 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
-                      return Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.grey[300]!,
-                              width: 1,
+                      return GestureDetector(
+                        onTap: () {
+                          print('object');
+                          setState(() {
+                            // _epubReaderController.scrollTo(index: chapter.startIndex);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
                             ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  FutureBuilder<String>(
-                                    future: _getChapterTitleByIndex(
-                                        widget.epubReaderController,
-                                        widget
-                                            .bookmarksinfo[
-                                                widget.bookmarksinfo.length -
-                                                    index -
-                                                    1]
-                                            .bookmarkedindex!
-                                            .toInt()),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Text(
-                                          snapshot.data ??
-                                              'Título não disponível',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey,
-                                          ),
-                                        );
-                                      } else if (snapshot.hasError) {
-                                        return const Text(
-                                            'Erro ao carregar o título do capítulo');
-                                      } else {
-                                        return const CircularProgressIndicator();
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          _getNote(widget
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    FutureBuilder<String>(
+                                      future: _getChapterTitleByIndex(
+                                          widget.epubReaderController,
+                                          widget
                                               .bookmarksinfo[
                                                   widget.bookmarksinfo.length -
                                                       index -
                                                       1]
-                                              .note),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onBackground,
+                                              .bookmarkedindex!
+                                              .toInt()),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          return Text(
+                                            snapshot.data ??
+                                                'Título não disponível',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
+                                          );
+                                        } else if (snapshot.hasError) {
+                                          return const Text(
+                                              'Erro ao carregar o título do capítulo');
+                                        } else {
+                                          return const CircularProgressIndicator();
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            _getNote(widget
+                                                .bookmarksinfo[widget
+                                                        .bookmarksinfo.length -
+                                                    index -
+                                                    1]
+                                                .note),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onBackground,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            onPressed: () {
-                                              _showNoteDialog(
-                                                context,
-                                                widget.bookmarksinfo[widget
-                                                        .bookmarksinfo.length -
-                                                    index -
-                                                    1],
-                                              );
-                                            },
-                                            icon: Icon(
-                                              Icons.edit,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onBackground,
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              onPressed: () {
+                                                _showNoteDialog(
+                                                  context,
+                                                  widget.bookmarksinfo[widget
+                                                          .bookmarksinfo
+                                                          .length -
+                                                      index -
+                                                      1],
+                                                );
+                                              },
+                                              icon: Icon(
+                                                Icons.edit,
+                                                size: 15,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onBackground,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            onPressed: () {
-                                              _showDeleteDialog(
-                                                context,
-                                                widget.bookmarksinfo[widget
-                                                        .bookmarksinfo.length -
-                                                    index -
-                                                    1],
-                                              );
-                                            },
-                                            icon: Icon(
-                                              Icons.close,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onBackground,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                            const SizedBox(width: 8),
+                                            _getNote(widget
+                                                        .bookmarksinfo[widget
+                                                                .bookmarksinfo
+                                                                .length -
+                                                            index -
+                                                            1]
+                                                        .note) !=
+                                                    ''
+                                                ? IconButton(
+                                                    onPressed: () {
+                                                      _showDeleteDialog(
+                                                        context,
+                                                        widget.bookmarksinfo[
+                                                            widget.bookmarksinfo
+                                                                    .length -
+                                                                index -
+                                                                1],
+                                                      );
+                                                    },
+                                                    icon: Icon(
+                                                      Icons.close,
+                                                      size: 15,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onBackground,
+                                                    ),
+                                                  )
+                                                : Container(),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },
