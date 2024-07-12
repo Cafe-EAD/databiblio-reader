@@ -422,8 +422,9 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   }
 
   bool _hasAnsweredQuestion(int questionId) {
-    final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
-    return answeredQuestions.contains(questionId.toString());
+    return false;
+    //final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
+    //return answeredQuestions.contains(questionId.toString());
   }
 
   _getInfoPopular() async {
