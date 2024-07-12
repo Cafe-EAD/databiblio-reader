@@ -24,10 +24,14 @@ import 'widget/text-to-speech_icon.dart';
    bool? tema;
 class ReaderScreen extends StatefulWidget {
   final Future<EpubBook> book;
+  final int userId;
+  final int bookId;
 
   const ReaderScreen({
     Key? key,
     required this.book,
+    required this.bookId,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -40,8 +44,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   TextEditingController textController = TextEditingController();
 
   late CustomBuilderOptions _builderOptions;
-  late int userId;
-  late int bookId;
 
   bool isDefaultFont = true;
   String defaultFont = "";
@@ -102,19 +104,16 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   void initState() {
     _initPrefs();
 
-
     if (kIsWeb) preventContextMenu();
 
     _tabController = TabController(length: 2, vsync: this);
-
-
 
     _epubReaderController = EpubController(
       document: widget.book,
     );
 
-    _epubReaderController.userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
-    _epubReaderController.bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
+    _epubReaderController.userId = widget.userId;
+    _epubReaderController.bookId = widget.bookId;
 
     _epubReaderController.tableOfContentsListenable.addListener(() {
       //  _epubReaderController._epubViewState._paragraphs;
@@ -422,9 +421,8 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   }
 
   bool _hasAnsweredQuestion(int questionId) {
-    return false;
-    //final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
-    //return answeredQuestions.contains(questionId.toString());
+    final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
+    return answeredQuestions.contains(questionId.toString());
   }
 
   _getInfoPopular() async {

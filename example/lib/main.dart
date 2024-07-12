@@ -88,6 +88,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           Uri.base.queryParameters['revision'] ?? ""}/${
             Uri.base.queryParameters['bookname'] ?? ""}',
   );
+
+  final userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
+  final bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
+
   @override
   Widget build(BuildContext context) => MaterialApp(
         title: 'Epub demo',
@@ -100,7 +104,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
         themeMode: ThemeMode.light,
         debugShowCheckedModeBanner: false,
-        home: ReaderScreen(book: book),
+        home: ReaderScreen(book: book, bookId: bookId, userId: userId),
         builder: (context, widget) {
           widget = _getMenu(widget);
           return widget!;
