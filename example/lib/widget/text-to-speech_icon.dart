@@ -1,34 +1,47 @@
 import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
-import 'package:html/parser.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'dart:convert';
+import 'package:archive/archive.dart';
+import '../reader.dart';
 
 class TextToSpeechButton extends StatefulWidget {
-  final EpubController epubReaderController;
-  const TextToSpeechButton(this.epubReaderController, {Key? key}) : super(key: key);
+  final String texto;
+  const TextToSpeechButton(this.texto, {Key? key})
+      : super(key: key);
 
   @override
   _TextToSpeechButtonState createState() => _TextToSpeechButtonState();
 }
 
-class _TextToSpeechButtonState extends State<TextToSpeechButton> with TickerProviderStateMixin {
+
+class _TextToSpeechButtonState extends State<TextToSpeechButton>
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   bool isPlaying = false;
-  late FlutterTts _flutterTts;
-  TtsState ttsState = TtsState.stopped;
-  double volume = 0.5;
-  double pitch = 1.0;
-  double rate = 0.5;
 
+  FlutterTts _flutterTts = FlutterTts();
+  List<Map> _voices = [];
+  Map? _currentVoice;
+
+ int chunkAtual=0;
+List<String>? textChunks;
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
     );
-    _initTts();
+    initTTS();
+    loadText();
   }
+
+void loadText() {
+  var texto = widget.texto.replaceAll('\n', '');
+ textChunks = splitTextIntoChunks(texto, 3800, 3900);
+  
+}
 
   @override
   void dispose() {
@@ -40,14 +53,13 @@ class _TextToSpeechButtonState extends State<TextToSpeechButton> with TickerProv
   void _handleOnPressed() async {
     setState(() {
       if (isPlaying) {
+       _flutterTts.stop();
         _controller.reverse();
-        _pauseTextToSpeech();
       } else {
+        chunkAtual=0;
+        _flutterTts.speak(textChunks![chunkAtual]);
         _controller.forward();
-        extractTextFromEpub(widget.epubReaderController).then((text) {
-          _onTextToSpeech(text);
-        });
-      }
+            }
       isPlaying = !isPlaying;
     });
   }
@@ -63,100 +75,70 @@ class _TextToSpeechButtonState extends State<TextToSpeechButton> with TickerProv
     );
   }
 
-  void _initTts() {
-    _flutterTts = FlutterTts();
-
-    _flutterTts.setStartHandler(() {
-      setState(() {
-        print("Playing");
-        ttsState = TtsState.playing;
-      });
+  void initTTS() {
+    // _flutterTts.setProgressHandler((text, start, end, word) {
+    //   setState(() {
+    //     _currentWordStart = start;
+    //     _currentWordEnd = end;
+    //   });
+    // });
+    _flutterTts.getVoices.then((data) {
+      try {
+        List<Map> voices = List<Map>.from(data);
+        setState(() {
+          _voices =
+              voices.where((voice) => voice["name"].contains("en")).toList();
+          _currentVoice = _voices.first;
+          setVoice(_currentVoice!);
+        });
+      } 
+      catch (e) {
+        print(e);
+      }
     });
-
     _flutterTts.setCompletionHandler(() {
       setState(() {
-        print("Complete");
-        ttsState = TtsState.stopped;
-        isPlaying = false;
+        if(textChunks!.length==chunkAtual){
+        // print("Complete");
         _controller.reverse();
+        isPlaying=false;
+        }else{
+          chunkAtual++;
+          _flutterTts.speak(textChunks![chunkAtual]);
+        }
       });
     });
 
-    _flutterTts.setCancelHandler(() {
-      setState(() {
-        print("Cancel");
-        ttsState = TtsState.stopped;
-        isPlaying = false;
-        _controller.reverse();
-      });
-    });
-
-    _flutterTts.setPauseHandler(() {
-      setState(() {
-        print("Paused");
-        ttsState = TtsState.paused;
-      });
-    });
-
-    _flutterTts.setContinueHandler(() {
-      setState(() {
-        print("Continued");
-        ttsState = TtsState.continued;
-      });
-    });
-
-    _flutterTts.setErrorHandler((msg) {
-      setState(() {
-        print("error: $msg");
-        ttsState = TtsState.stopped;
-        isPlaying = false;
-        _controller.reverse();
-      });
-    });
-
-    _flutterTts.setVolume(volume);
-    _flutterTts.setSpeechRate(rate);
-    _flutterTts.setPitch(pitch);
   }
 
-  void _onTextToSpeech(String text) {
-    if (text.isNotEmpty) {
-      _flutterTts.speak(text);
+    void setVoice(Map voice) {
+    _flutterTts.setVoice({"name": voice["name"], "locale": voice["locale"]});
+  }
+
+}
+
+List<String> splitTextIntoChunks(String text, int minSize, int maxSize) {
+  List<String> chunks = [];
+  int start = 0;
+  while (start < text.length) {
+    int end = start + maxSize;
+    if (end >= text.length) {
+      chunks.add(text.substring(start));
+      break;
     }
+
+    int lastSpace = text.lastIndexOf(' ', end);
+    if (lastSpace < start + minSize) {
+      lastSpace = text.indexOf(' ', end);
+      if (lastSpace == -1) {
+        chunks.add(text.substring(start));
+        break;
+      }
+    }
+
+    chunks.add(text.substring(start, lastSpace));
+    start = lastSpace + 1;
   }
 
-  void _pauseTextToSpeech() {
-    _flutterTts.pause();
-  }
-}
-
-enum TtsState { playing, stopped, paused, continued }
-
-Future<String> extractTextFromEpub(EpubController epubReaderController) async {
-  EpubBook? document = await epubReaderController.document;
-  if (document == null) return '';
-
-  final StringBuffer buffer = StringBuffer();
-
-  for (var chapter in document.Chapters!) {
-    _extractChapterText(chapter, buffer);
-  }
-
-  return buffer.toString();
-}
-
-void _extractChapterText(EpubChapter chapter, StringBuffer buffer) {
-  if (chapter.HtmlContent != null) {
-    final textContent = _removeHtmlTags(chapter.HtmlContent!);
-    buffer.writeln(textContent);
-  }
-
-  for (var subChapter in chapter.SubChapters!) {
-    _extractChapterText(subChapter, buffer);
-  }
-}
-
-String _removeHtmlTags(String html) {
-  final document = parse(html);
-  return document.body?.text ?? '';
+  return chunks;
 }
