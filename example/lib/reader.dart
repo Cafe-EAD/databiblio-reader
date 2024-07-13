@@ -27,10 +27,14 @@ import 'widget/text-to-speech_icon.dart';
 
 class ReaderScreen extends StatefulWidget {
   final Future<EpubBook> book;
+  final int userId;
+  final int bookId;
 
   const ReaderScreen({
     Key? key,
     required this.book,
+    required this.bookId,
+    required this.userId,
   }) : super(key: key);
 
   @override
@@ -43,8 +47,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   TextEditingController textController = TextEditingController();
 
   late CustomBuilderOptions _builderOptions;
-  late int userId;
-  late int bookId;
 
   bool isDefaultFont = true;
   String defaultFont = "";
@@ -112,20 +114,20 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   @override
   void initState() {
     _initPrefs();
+
 _loadEpubDocument();
+
 
     if (kIsWeb) preventContextMenu();
 
     _tabController = TabController(length: 2, vsync: this);
 
-
-
     _epubReaderController = EpubController(
       document: widget.book,
     );
 
-    _epubReaderController.userId = int.parse(Uri.base.queryParameters['userid'] ?? "0");
-    _epubReaderController.bookId = int.parse(Uri.base.queryParameters['bookid'] ?? "0");
+    _epubReaderController.userId = widget.userId;
+    _epubReaderController.bookId = widget.bookId;
 
     _epubReaderController.tableOfContentsListenable.addListener(() {
       //  _epubReaderController._epubViewState._paragraphs;
@@ -396,6 +398,9 @@ _loadEpubDocument();
           bookId: _epubReaderController.bookId,
           userId: _epubReaderController.userId,
           chapterStartIndices: _epubReaderController.chapterStartIndices,
+          onBookmarkTap: (index) {
+            _handleBookmarkTap(index);
+          },
         );
       default:
         return Container();
@@ -471,11 +476,24 @@ String _removeHtmlTags(String html) {
     setState(() {
       bookmarksinfo = bookmarks;
       highlightsinfo = highlights;
+      highlightsinfo.sort((a, b) {
+        int chapterA = int.tryParse(a.chapter ?? '0') ?? 0;
+        int chapterB = int.tryParse(b.chapter ?? '0') ?? 0;
+        return chapterA.compareTo(chapterB);
+      });
     });
   }
 
   void _updateBookmarks() {
     _getInfoPopular();
+  }
+
+  void _handleBookmarkTap(int index) {
+      _epubReaderController.jumpTo(index: index, alignment: 0);
+    setState(() {
+      _showSearchField = false;
+      _bottomSheetState = 0;
+    });
   }
 
   /*
