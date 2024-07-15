@@ -15,8 +15,8 @@ class TextToSpeechButtonState extends State<TextToSpeechButton>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   bool isPlaying = false;
-  final int maxCar = 3900;
-  final int minCar = 3800;
+  final int maxCar = 15;
+  final int minCar = 11;
   final FlutterTts _flutterTts = FlutterTts();
   List<Map> _voices = [];
   Map? _currentVoice;
@@ -36,7 +36,7 @@ List<String>? textChunks;
 
 void loadText() {
   var texto = widget.texto.replaceAll('\n', '');
- textChunks = _splitTextIntoChunks(texto, minCar, maxCar);
+ textChunks = _splitTextIntoChunks('rato gato lanterna ', minCar, maxCar);
   
 }
 
@@ -73,6 +73,13 @@ void loadText() {
   }
 
   void initTTS() {
+    // posiçao no texto 
+    // _flutterTts.setProgressHandler((text, start, end, word) {
+    //   setState(() {
+    //     _currentWordStart = start;
+    //     _currentWordEnd = end;
+    //   });
+    // });
     _flutterTts.getVoices.then((data) {
       try {
         List<Map> voices = List<Map>.from(data);
@@ -84,7 +91,7 @@ void loadText() {
         });
       } 
       catch (e) {
-        print(e);
+        SnackBar(content: Text('$e'),);
       }
     });
     _flutterTts.setCompletionHandler(() {
@@ -109,27 +116,18 @@ void loadText() {
 }
 
 List<String> _splitTextIntoChunks(String text, int minSize, int maxSize) {
-  List<String> chunks = [];
-  int start = 0;
-  while (start < text.length) {
-    int end = start + maxSize;
-    if (end >= text.length) {
-      chunks.add(text.substring(start));
-      break;
-    }
 
-    int lastSpace = text.lastIndexOf(' ', end);
-    if (lastSpace < start + minSize) {
-      lastSpace = text.indexOf(' ', end);
-      if (lastSpace == -1) {
-        chunks.add(text.substring(start));
-        break;
-      }
-    }
 
-    chunks.add(text.substring(start, lastSpace));
-    start = lastSpace + 1;
-  }
+  List<String> chunks = [''];
+  List<String> wordList = text.split(' ');
+    while(wordList.isNotEmpty){
+    if(chunks.last.length+wordList.first.length+1<maxSize){
+      var spc = chunks.last.isEmpty? '':' ';
+      chunks.last+=spc+wordList.removeAt(0);
+    }else{
+    chunks.add('');
+    }
+    }
 
   return chunks;
 }

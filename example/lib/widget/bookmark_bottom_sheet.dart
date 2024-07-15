@@ -20,6 +20,7 @@ class BookmarkBottomSheet extends StatefulWidget {
   final int bookId;
   final int userId;
   final Map<String, int> chapterStartIndices;
+  final Function(int) onBookmarkTap;
 
   const BookmarkBottomSheet({
     Key? key,
@@ -35,6 +36,7 @@ class BookmarkBottomSheet extends StatefulWidget {
     required this.bookId,
     required this.userId,
     required this.chapterStartIndices,
+    required this.onBookmarkTap,
   }) : super(key: key);
 
   @override
@@ -42,6 +44,7 @@ class BookmarkBottomSheet extends StatefulWidget {
 }
 
 class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
+  bool _isClickInProgress = false;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -72,45 +75,7 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () async {
-                    if (widget.bookmarksinfo.any(
-                      (bookmark) =>
-                          bookmark.bookmarkedindex ==
-                          widget
-                              .epubReaderController.currentValue!.chapterNumber,
-                    )) {
-                      try {
-                        // print("Remover");
-                        BookmarkModel bookmarkToRemove =
-                            widget.bookmarksinfo.firstWhere(
-                          (bookmark) =>
-                              bookmark.bookmarkedindex ==
-                              widget.epubReaderController.currentValue!
-                                  .chapterNumber,
-                        );
-                        int bookmarkIdToRemove = bookmarkToRemove.id!;
-                        await deleteBookmark(bookmarkIdToRemove);
-                        widget.onBookmarkAdded();
-                      } catch (e) {
-                        widget.onBookmarkAdded();
-                        print('Erro ao criar bookmark: ${e.toString()}');
-                      }
-                    } else {
-                      // print("Marcar");
-                      try {
-                        await postBookmark(
-                          widget.bookId == 0 ? 1 : widget.bookId,
-                          widget.userId == 0 ? 1 : widget.userId,
-                          widget
-                              .epubReaderController.currentValue!.chapterNumber,
-                        );
-                        widget.onBookmarkAdded();
-                      } catch (e) {
-                        widget.onBookmarkAdded();
-                        print('Erro ao criar bookmark: ${e.toString()}');
-                      }
-                    }
-                  },
+                  onTap: _isClickInProgress ? null : _handleTap,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -182,109 +147,144 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
-                      return Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Colors.grey[300]!,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  FutureBuilder<String>(
-                                    future: _getChapterTitleByIndex(
-                                        widget.epubReaderController,
-                                        widget
-                                            .bookmarksinfo[
-                                                widget.bookmarksinfo.length -
-                                                    index -
-                                                    1]
-                                            .bookmarkedindex!
-                                            .toInt()),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Text(
-                                          snapshot.data ??
-                                              'Título não disponível',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey,
-                                          ),
-                                        );
-                                      } else if (snapshot.hasError) {
-                                        return const Text(
-                                            'Erro ao carregar o título do capítulo');
-                                      } else {
-                                        return const CircularProgressIndicator();
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _getNote(widget
-                                        .bookmarksinfo[
-                                            widget.bookmarksinfo.length -
-                                                index -
-                                                1]
-                                        .note),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onBackground,
-                                    ),
-                                  ),
-                                ],
+                      return GestureDetector(
+                        onTap: () async {
+                          int? startIndex = await _getStartIndexByIndex(
+                              widget.epubReaderController,
+                              widget
+                                  .bookmarksinfo[
+                                      widget.bookmarksinfo.length - index - 1]
+                                  .bookmarkedindex!
+                                  .toInt());
+                          if (startIndex != null) {
+                            widget.onBookmarkTap(startIndex);
+                          } else {
+                            print('startIndex é nulo para o bookmark $index');
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16.0),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.grey[300]!,
+                                width: 1,
                               ),
                             ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    _showNoteDialog(
-                                      context,
-                                      widget.bookmarksinfo[
-                                          widget.bookmarksinfo.length -
-                                              index -
-                                              1],
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Icons.edit,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                  ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    FutureBuilder<String>(
+                                      future: _getChapterTitleByIndex(
+                                          widget.epubReaderController,
+                                          widget
+                                              .bookmarksinfo[
+                                                  widget.bookmarksinfo.length -
+                                                      index -
+                                                      1]
+                                              .bookmarkedindex!
+                                              .toInt()),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          return Text(
+                                            snapshot.data ??
+                                                'Título não disponível',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
+                                          );
+                                        } else if (snapshot.hasError) {
+                                          return const Text(
+                                              'Erro ao carregar o título do capítulo');
+                                        } else {
+                                          return const CircularProgressIndicator();
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            _getNote(widget
+                                                .bookmarksinfo[widget
+                                                        .bookmarksinfo.length -
+                                                    index -
+                                                    1]
+                                                .note),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onBackground,
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              onPressed: () {
+                                                _showNoteDialog(
+                                                  context,
+                                                  widget.bookmarksinfo[widget
+                                                          .bookmarksinfo
+                                                          .length -
+                                                      index -
+                                                      1],
+                                                );
+                                              },
+                                              icon: Icon(
+                                                Icons.edit,
+                                                size: 15,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onBackground,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            _getNote(widget
+                                                        .bookmarksinfo[widget
+                                                                .bookmarksinfo
+                                                                .length -
+                                                            index -
+                                                            1]
+                                                        .note) !=
+                                                    ''
+                                                ? IconButton(
+                                                    onPressed: () {
+                                                      _showDeleteDialog(
+                                                        context,
+                                                        widget.bookmarksinfo[
+                                                            widget.bookmarksinfo
+                                                                    .length -
+                                                                index -
+                                                                1],
+                                                      );
+                                                    },
+                                                    icon: Icon(
+                                                      Icons.close,
+                                                      size: 15,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onBackground,
+                                                    ),
+                                                  )
+                                                : Container(),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  onPressed: () {
-                                    _showDeleteDialog(
-                                      context,
-                                      widget.bookmarksinfo[
-                                          widget.bookmarksinfo.length -
-                                              index -
-                                              1],
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Icons.close,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onBackground,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -538,6 +538,58 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
       },
     );
   }
+
+  Future<void> _handleTap() async {
+    setState(() {
+      _isClickInProgress = true;
+    });
+
+    if (widget.bookmarksinfo.any(
+      (bookmark) =>
+          bookmark.bookmarkedindex ==
+          widget.epubReaderController.currentValue!.chapterNumber,
+    )) {
+      try {
+        // print("Remover");
+        BookmarkModel bookmarkToRemove = widget.bookmarksinfo.firstWhere(
+          (bookmark) =>
+              bookmark.bookmarkedindex ==
+              widget.epubReaderController.currentValue!.chapterNumber,
+        );
+        int bookmarkIdToRemove = bookmarkToRemove.id!;
+        await deleteBookmark(bookmarkIdToRemove);
+        widget.onBookmarkAdded();
+        setState(() {
+          _isClickInProgress = false;
+        });
+      } catch (e) {
+        widget.onBookmarkAdded();
+        print('Erro ao criar bookmark: ${e.toString()}');
+        setState(() {
+          _isClickInProgress = false;
+        });
+      }
+    } else {
+      // print("Marcar");
+      try {
+        await postBookmark(
+          widget.bookId == 0 ? 1 : widget.bookId,
+          widget.userId == 0 ? 1 : widget.userId,
+          widget.epubReaderController.currentValue!.chapterNumber,
+        );
+        widget.onBookmarkAdded();
+        setState(() {
+          _isClickInProgress = false;
+        });
+      } catch (e) {
+        widget.onBookmarkAdded();
+        print('Erro ao criar bookmark: ${e.toString()}');
+        setState(() {
+          _isClickInProgress = false;
+        });
+      }
+    }
+  }
 }
 
 Future<String> _getChapterTitleByIndex(
@@ -545,6 +597,13 @@ Future<String> _getChapterTitleByIndex(
   final epubBook = await controller.document;
   final chapter = epubBook.Chapters![index - 1];
   return chapter.Title ?? 'Título não disponível';
+}
+
+_getStartIndexByIndex(EpubController controller, int index) async {
+  final epubBook = await controller.document;
+  final chapter = epubBook.Chapters![index - 1];
+  final startIndex = controller.chapterStartIndices[chapter.Title];
+  return startIndex;
 }
 
 _getNote(note) {
