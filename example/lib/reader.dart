@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-
+import 'dart:convert';
+import 'package:archive/archive.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
@@ -13,15 +14,17 @@ import 'package:epub_view_example/widget/quiz_modal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:html/parser.dart';
 
 import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
-import 'widget/text-to-speech_icon.dart';
+import 'widget/text-to-speech_button.dart';
   bool disl = false;
    bool? tema;
+
 class ReaderScreen extends StatefulWidget {
   final Future<EpubBook> book;
   final int userId;
@@ -95,14 +98,25 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   int _currentQuestionIndex = 0;
   int _currentChapter = 0;
   bool _showQuiz = false;
+  EpubBook? _document;
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
   }
-
+  Future<void> _loadEpubDocument() async {
+    EpubBook? document = await widget.book;
+    if (document != null) {
+      setState(() {
+        _document = document;
+      });
+    }
+  }
   @override
   void initState() {
     _initPrefs();
+
+  _loadEpubDocument();
+
 
     if (kIsWeb) preventContextMenu();
 
@@ -210,6 +224,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
               },
             ),
             actions: <Widget>[
+              _document!=null? TextToSpeechButton(_extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim()):Container(),
               IconButton(
                 icon: const Icon(Icons.bookmark),
                 color: Theme.of(context).colorScheme.onBackground,
@@ -284,7 +299,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   }
                 },
               ),
-             TextToSpeechButton(_epubReaderController),
               AnimSearchBar(
                 width: 300,
                 textController: textController,
@@ -408,6 +422,32 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       }
     });
   }
+String _extractTextFromEpubSync() {
+  if (_document == null) return '';
+
+  return _document!.Chapters!.fold(StringBuffer(), (StringBuffer buffer, EpubChapter chapter) {
+    _extractChapterText(chapter, buffer);
+    return buffer;
+  }).toString();
+}
+
+void _extractChapterText(EpubChapter chapter, StringBuffer buffer) {
+  if (chapter.HtmlContent != null) {
+    final textContent = _removeHtmlTags(chapter.HtmlContent!);
+    buffer.writeln(textContent);
+  }
+
+  for (var subChapter in chapter.SubChapters!) {
+    _extractChapterText(subChapter, buffer);
+  }
+}
+
+String _removeHtmlTags(String html) {
+  final document = parse(html);
+  return document.body?.text ?? '';
+}
+
+
 
   // Future<void> _clearAnsweredQuestions() async {
   //   _prefs = await SharedPreferences.getInstance();
@@ -511,4 +551,5 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       print('POST Locator Error ==== $e  $t');
     }
   }
+
 }
