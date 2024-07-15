@@ -15,8 +15,7 @@ class TextToSpeechButtonState extends State<TextToSpeechButton>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   bool isPlaying = false;
-  final int maxCar = 15;
-  final int minCar = 11;
+  final int maxCar = 3900;
   final FlutterTts _flutterTts = FlutterTts();
   List<Map> _voices = [];
   Map? _currentVoice;
@@ -36,7 +35,7 @@ List<String>? textChunks;
 
 void loadText() {
   var texto = widget.texto.replaceAll('\n', '');
- textChunks = _splitTextIntoChunks('rato gato lanterna ', minCar, maxCar);
+ textChunks = _splitTextIntoChunks(texto, maxCar);
   
 }
 
@@ -115,7 +114,7 @@ void loadText() {
 
 }
 
-List<String> _splitTextIntoChunks(String text, int minSize, int maxSize) {
+List<String> _splitTextIntoChunks(String text, int maxSize) {
 
 
   List<String> chunks = [''];
