@@ -224,6 +224,7 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
               },
             ),
             actions: <Widget>[
+              _document!=null? TextToSpeechButton(_extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim()):Container(),
               IconButton(
                 icon: const Icon(Icons.bookmark),
                 color: Theme.of(context).colorScheme.onBackground,
@@ -298,7 +299,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   }
                 },
               ),
-              _document!=null? TextToSpeechButton(_extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim()):Container(),
               AnimSearchBar(
                 width: 300,
                 textController: textController,
