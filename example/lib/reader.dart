@@ -296,8 +296,7 @@ _loadEpubDocument();
                   }
                 },
               ),
-              _document!=null?
-             TextToSpeechButton(extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim()):Container(),
+              _document!=null? TextToSpeechButton(_extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim()):Container(),
               AnimSearchBar(
                 width: 300,
                 textController: textController,
@@ -418,7 +417,7 @@ _loadEpubDocument();
       }
     });
   }
-String extractTextFromEpubSync() {
+String _extractTextFromEpubSync() {
   if (_document == null) return '';
 
   return _document!.Chapters!.fold(StringBuffer(), (StringBuffer buffer, EpubChapter chapter) {
@@ -534,9 +533,5 @@ String _removeHtmlTags(String html) {
       print('POST Locator Error ==== $e  $t');
     }
   }
-  String compressString(String data) {
-  List<int> stringBytes = utf8.encode(data);
-  List<int> compressedBytes = GZipEncoder().encode(stringBytes)!;
-  return base64Encode(compressedBytes);
-}
+
 }

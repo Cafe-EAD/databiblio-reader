@@ -1,9 +1,5 @@
-import 'package:epub_view/epub_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'dart:convert';
-import 'package:archive/archive.dart';
-import '../reader.dart';
 
 class TextToSpeechButton extends StatefulWidget {
   final String texto;
@@ -11,16 +7,17 @@ class TextToSpeechButton extends StatefulWidget {
       : super(key: key);
 
   @override
-  _TextToSpeechButtonState createState() => _TextToSpeechButtonState();
+  TextToSpeechButtonState createState() => TextToSpeechButtonState();
 }
 
 
-class _TextToSpeechButtonState extends State<TextToSpeechButton>
+class TextToSpeechButtonState extends State<TextToSpeechButton>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   bool isPlaying = false;
-
-  FlutterTts _flutterTts = FlutterTts();
+  final int maxCar = 3900;
+  final int minCar = 3800;
+  final FlutterTts _flutterTts = FlutterTts();
   List<Map> _voices = [];
   Map? _currentVoice;
 
@@ -39,7 +36,7 @@ List<String>? textChunks;
 
 void loadText() {
   var texto = widget.texto.replaceAll('\n', '');
- textChunks = splitTextIntoChunks(texto, 3800, 3900);
+ textChunks = _splitTextIntoChunks(texto, minCar, maxCar);
   
 }
 
@@ -76,12 +73,6 @@ void loadText() {
   }
 
   void initTTS() {
-    // _flutterTts.setProgressHandler((text, start, end, word) {
-    //   setState(() {
-    //     _currentWordStart = start;
-    //     _currentWordEnd = end;
-    //   });
-    // });
     _flutterTts.getVoices.then((data) {
       try {
         List<Map> voices = List<Map>.from(data);
@@ -89,7 +80,7 @@ void loadText() {
           _voices =
               voices.where((voice) => voice["name"].contains("en")).toList();
           _currentVoice = _voices.first;
-          setVoice(_currentVoice!);
+          _setVoice(_currentVoice!);
         });
       } 
       catch (e) {
@@ -111,13 +102,13 @@ void loadText() {
 
   }
 
-    void setVoice(Map voice) {
+    void _setVoice(Map voice) {
     _flutterTts.setVoice({"name": voice["name"], "locale": voice["locale"]});
   }
 
 }
 
-List<String> splitTextIntoChunks(String text, int minSize, int maxSize) {
+List<String> _splitTextIntoChunks(String text, int minSize, int maxSize) {
   List<String> chunks = [];
   int start = 0;
   while (start < text.length) {
