@@ -33,9 +33,9 @@ List<String>? textChunks;
     loadText();
   }
 
-void loadText() {
+void loadText()  {
   var texto = widget.texto.replaceAll('\n', '');
- textChunks = _splitTextIntoChunks(texto, maxCar);
+ textChunks =  _splitTextIntoChunks(texto, maxCar);
   
 }
 
@@ -115,18 +115,27 @@ void loadText() {
 }
 
 List<String> _splitTextIntoChunks(String text, int maxSize) {
+  List<String> chunks = [];
+  int start = 0;
 
+  while (start < text.length) {
+    int end = start + maxSize;
 
-  List<String> chunks = [''];
-  List<String> wordList = text.split(' ');
-    while(wordList.isNotEmpty){
-    if(chunks.last.length+wordList.first.length+1<maxSize){
-      var spc = chunks.last.isEmpty? '':' ';
-      chunks.last+=spc+wordList.removeAt(0);
-    }else{
-    chunks.add('');
+    if (end >= text.length) {
+      chunks.add(text.substring(start).trim());
+      break;
     }
+
+    int lastSpace = text.lastIndexOf(' ', end);
+
+    if (lastSpace == -1 || lastSpace < start) {
+      lastSpace = end;
     }
+
+    chunks.add(text.substring(start, lastSpace).trim());
+    start = lastSpace + 1;
+  }
+
 
   return chunks;
 }
