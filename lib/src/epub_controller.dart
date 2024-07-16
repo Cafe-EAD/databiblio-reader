@@ -71,7 +71,7 @@ class EpubController {
       alignment: alignment,
       curve: curve,
     );
-    updateCurrentPage(); // Atualiza a página ao rolar para um índice
+    updateCurrentPage();
     return result;
   }
 
@@ -178,7 +178,7 @@ class EpubController {
         leadingEdge: currentValue.position.itemLeadingEdge,
       );
       if (paragraphIndex != null) {
-        final totalCharacters = paragraphIndex * charactersPerPage;
+        final totalCharacters = _calculateTotalCharacters(paragraphIndex);
         final newPage = (totalCharacters / charactersPerPage).ceil();
         if (newPage != currentPage.value) {
           currentPage.value = newPage == 0 ? 1 : newPage;
@@ -186,5 +186,13 @@ class EpubController {
         }
       }
     }
+  }
+
+  int _calculateTotalCharacters(int paragraphIndex) {
+    int totalCharacters = 0;
+    for (int i = 0; i < paragraphIndex; i++) {
+      totalCharacters += _epubViewState?._paragraphs[i].element.text.length ?? 0;
+    }
+    return totalCharacters;
   }
 }

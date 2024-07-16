@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-import 'dart:convert';
-import 'package:archive/archive.dart';
+
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
@@ -13,8 +12,8 @@ import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:html/parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'model/highlight_model.dart';
 import 'model/locator.dart';
@@ -22,8 +21,9 @@ import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
 import 'widget/text-to-speech_button.dart';
-  bool disl = false;
-   bool? tema;
+
+bool disl = false;
+bool? tema;
 
 class ReaderScreen extends StatefulWidget {
   final Future<EpubBook> book;
@@ -103,20 +103,19 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
   }
+
   Future<void> _loadEpubDocument() async {
     EpubBook? document = await widget.book;
-    if (document != null) {
-      setState(() {
-        _document = document;
-      });
-    }
+    setState(() {
+      _document = document;
+    });
   }
+
   @override
   void initState() {
     _initPrefs();
 
-  _loadEpubDocument();
-
+    _loadEpubDocument();
 
     if (kIsWeb) preventContextMenu();
 
@@ -178,10 +177,11 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       });
     });
   }
+
   ThemeMode? _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
     setState(() {
-    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
     });
   }
 
@@ -195,20 +195,15 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
               _epubReaderController.isPageNumberVisible,
             ]),
             builder: (_, __) {
-              return AnimatedOpacity(
-                duration: const Duration(milliseconds: 400),
-                // opacity: _epubReaderController.isPageNumberVisible.value ? 1 : 0,
-                opacity: 1,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Página ${_epubReaderController.currentPage.value}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
+              return Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Página ${_epubReaderController.currentPage.value}',
+                  style: const TextStyle(color: Colors.white),
                 ),
               );
             },
@@ -224,10 +219,13 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
               },
             ),
             actions: <Widget>[
-              _document!=null? TextToSpeechButton(_extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim()):Container(),
+              _document != null
+                  ? TextToSpeechButton(
+                      _extractTextFromEpubSync().replaceAll(RegExp(r'\s+'), ' ').trim())
+                  : Container(),
               IconButton(
                 icon: const Icon(Icons.bookmark),
-                color: Theme.of(context).colorScheme.onBackground,
+                color: Theme.of(context).colorScheme.onSurface,
                 onPressed: () async {
                   await _getInfoPopular();
                   setState(() {
@@ -311,7 +309,6 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
                   await searchMatch.busca(busca, context);
                 },
               ),
-              
             ],
           ),
           drawer: Drawer(
@@ -422,32 +419,31 @@ class _ReaderScreenState extends State<ReaderScreen> with SingleTickerProviderSt
       }
     });
   }
-String _extractTextFromEpubSync() {
-  if (_document == null) return '';
 
-  return _document!.Chapters!.fold(StringBuffer(), (StringBuffer buffer, EpubChapter chapter) {
-    _extractChapterText(chapter, buffer);
-    return buffer;
-  }).toString();
-}
+  String _extractTextFromEpubSync() {
+    if (_document == null) return '';
 
-void _extractChapterText(EpubChapter chapter, StringBuffer buffer) {
-  if (chapter.HtmlContent != null) {
-    final textContent = _removeHtmlTags(chapter.HtmlContent!);
-    buffer.writeln(textContent);
+    return _document!.Chapters!.fold(StringBuffer(), (StringBuffer buffer, EpubChapter chapter) {
+      _extractChapterText(chapter, buffer);
+      return buffer;
+    }).toString();
   }
 
-  for (var subChapter in chapter.SubChapters!) {
-    _extractChapterText(subChapter, buffer);
+  void _extractChapterText(EpubChapter chapter, StringBuffer buffer) {
+    if (chapter.HtmlContent != null) {
+      final textContent = _removeHtmlTags(chapter.HtmlContent!);
+      buffer.writeln(textContent);
+    }
+
+    for (var subChapter in chapter.SubChapters!) {
+      _extractChapterText(subChapter, buffer);
+    }
   }
-}
 
-String _removeHtmlTags(String html) {
-  final document = parse(html);
-  return document.body?.text ?? '';
-}
-
-
+  String _removeHtmlTags(String html) {
+    final document = parse(html);
+    return document.body?.text ?? '';
+  }
 
   // Future<void> _clearAnsweredQuestions() async {
   //   _prefs = await SharedPreferences.getInstance();
@@ -488,7 +484,7 @@ String _removeHtmlTags(String html) {
   }
 
   void _handleBookmarkTap(int index) {
-      _epubReaderController.jumpTo(index: index, alignment: 0);
+    _epubReaderController.jumpTo(index: index, alignment: 0);
     setState(() {
       _showSearchField = false;
       _bottomSheetState = 0;
@@ -551,5 +547,4 @@ String _removeHtmlTags(String html) {
       print('POST Locator Error ==== $e  $t');
     }
   }
-
 }

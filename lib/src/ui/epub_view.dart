@@ -93,6 +93,7 @@ class _EpubViewState extends State<EpubView> {
     _initTts();
     _itemScrollController = ItemScrollController();
     _itemPositionListener = ItemPositionsListener.create();
+    _itemPositionListener?.itemPositions.addListener(_updatePageOnScroll); // Add this line
     _controller._attach(this);
     _controller.loadingState.addListener(() {
       switch (_controller.loadingState.value) {
@@ -164,7 +165,7 @@ class _EpubViewState extends State<EpubView> {
 
   @override
   void dispose() {
-    _itemPositionListener!.itemPositions.removeListener(_changeListener);
+    _itemPositionListener!.itemPositions.removeListener(_updatePageOnScroll); // Add this line
     _controller._detach();
     _flutterTts.stop();
     super.dispose();
@@ -190,6 +191,10 @@ class _EpubViewState extends State<EpubView> {
     return true;
   }
 
+  void _updatePageOnScroll() {
+    _controller.updateCurrentPage();
+  }
+
   void _changeListener() {
     if (_paragraphs.isEmpty || _itemPositionListener!.itemPositions.value.isEmpty) {
       return;
@@ -213,6 +218,7 @@ class _EpubViewState extends State<EpubView> {
     );
     _controller.currentValueListenable.value = _currentValue;
     widget.onChapterChanged?.call(_currentValue);
+    _controller.updateCurrentPage();
   }
 
   void _gotoEpubCfi(
