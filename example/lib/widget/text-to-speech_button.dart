@@ -165,10 +165,13 @@ class TextToSpeechButtonState extends State<TextToSpeechButton>
             onChanged: (value) {
               setState(() {
                 _currentVoice = value;
+                if (value != null) {
+                  _setVoice(value);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Carregando voz')),
+                  );
+                }
               });
-              if (value != null) {
-                _setVoice(value);
-              }
               Navigator.of(context).pop();
             },
           ),
@@ -198,9 +201,7 @@ class TextToSpeechButtonState extends State<TextToSpeechButton>
           _setVoice(_currentVoice!);
         }
       });
-    } catch (e) {
-
-    }
+    } catch (e) {}
   }
 }
 
