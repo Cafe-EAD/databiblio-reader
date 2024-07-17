@@ -89,3 +89,11 @@ Future<GenericPostResponse> deleteBookmarkNote(int id) async {
           '$baseUrl?wsfunction=local_wsgetbooks_remove_bookmarknotes&id=$id',
           method: HttpMethod.DELETE))));
 }
+
+Future<GenericPostResponse> postReadingTime(
+    int userId, int bookId, int page, int timeSpent) async {
+  return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=local_wsgetbooks_post_readingtime&userid=$userId&bookid=$bookId&page=$page&timespent=$timeSpent',
+      method: HttpMethod.POST))));
+      
+}
