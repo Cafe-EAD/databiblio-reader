@@ -218,7 +218,6 @@ class _EpubViewState extends State<EpubView> {
     );
     _controller.currentValueListenable.value = _currentValue;
     widget.onChapterChanged?.call(_currentValue);
-    _controller.updateCurrentPage();
   }
 
   void _gotoEpubCfi(
