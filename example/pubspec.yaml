@@ -23,6 +23,8 @@ dependencies:
   html: ^0.15.4
   flutter_bloc: ^8.1.6
   flutter_tts: ^4.0.2
+  webview_flutter: ^4.8.0
+  flutter_widget_from_html: ^0.15.1
 
 dev_dependencies:
   flutter_test:

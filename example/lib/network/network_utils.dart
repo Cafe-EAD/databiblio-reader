@@ -41,10 +41,17 @@ Uri buildBaseUrl(String endPoint) {
 Future<Response> buildHttpResponse(String endPoint,
     {HttpMethod method = HttpMethod.GET,
     Map? request,
-    bool isStripePayment = false}) async {
+    bool isStripePayment = false, 
+    bool wsTokenBoll =  false}) async {
   if (await isNetworkAvailable()) {
     var headers = buildHeaderTokens();
-    const wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
+       String wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
+    if(wsTokenBoll == false){
+       wsToken = '2ab3f1e2a757c5bc5e1d3a32c7680395';
+    }else{
+         wsToken = '1f71f73e6a3406e6759fcb439b7fa957';
+    }
+
     Uri url =
         buildBaseUrl('$endPoint&wstoken=$wsToken&moodlewsrestformat=json');
     log(url);
