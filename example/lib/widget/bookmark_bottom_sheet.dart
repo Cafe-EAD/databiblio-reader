@@ -556,11 +556,12 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
     } else {
       // print("Marcar");
       try {
+        var title ='${widget.epubReaderController.currentValue!.chapter!.Title??''} - Página ${widget.epubReaderController.currentPage.value}';
         await postBookmark(
           widget.bookId == 0 ? 1 : widget.bookId,
           widget.userId == 0 ? 1 : widget.userId,
           widget.epubReaderController.currentValue!.chapterNumber,
-          '${widget.epubReaderController.currentValue!.chapter!.Title??''} - Página ${widget.epubReaderController.currentPage.value}'
+          title
         );
         widget.onBookmarkAdded();
         setState(() {

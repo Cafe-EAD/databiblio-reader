@@ -49,7 +49,7 @@ Future<List<BookmarkModel>> getBookmarks(int userId, int bookId) async {
 Future<GenericPostResponse> postBookmark(
     int bookId, int userId, int bookmarkedIndex, String title) async {
   return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
-      '$baseUrl?wsfunction=local_wsgetbooks_post_bookmark&userid=$userId&bookid=$bookId&bookmarkedindex=$bookmarkedIndex',
+      '$baseUrl?wsfunction=local_wsgetbooks_post_bookmark&userid=$userId&bookid=$bookId&bookmarkedindex=$bookmarkedIndex&title=$title',
       method: HttpMethod.POST))));
 }
 
