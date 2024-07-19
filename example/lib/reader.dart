@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-
+import 'dart:convert';
+import 'package:archive/archive.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
@@ -8,19 +9,21 @@ import 'package:epub_view/src/data/models/chapter_view_value.dart';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/quiz_attempt_data.dart';
 import 'package:epub_view_example/model/quiz_data.dart';
+import 'package:epub_view_example/model/common.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:html/parser.dart';
 
 import 'model/highlight_model.dart';
 import 'model/locator.dart';
 import 'network/rest.dart';
 import 'widget/bottom_Sheet.dart';
 import 'widget/search_match.dart';
-import 'widget/text-to-speech_icon.dart';
+import 'widget/text-to-speech_button.dart';
 
 bool disl = false;
 bool? tema;
@@ -68,14 +71,26 @@ class _ReaderScreenState extends State<ReaderScreen>
   late SharedPreferences _prefs;
   int _currentChapter = 0;
   bool _showQuiz = false;
+  EpubBook? _document;
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  Future<void> _loadEpubDocument() async {
+    EpubBook? document = await widget.book;
+    if (document != null) {
+      setState(() {
+        _document = document;
+      });
+    }
+  }
+
   @override
   void initState() {
     _initPrefs();
+
+    _loadEpubDocument();
 
     if (kIsWeb) preventContextMenu();
 
@@ -213,6 +228,8 @@ class _ReaderScreenState extends State<ReaderScreen>
     });
   }
 
+  int? _pagAtual;
+  DateTime? _horaAtual;
   ThemeMode? _themeMode = ThemeMode.system;
   void toggleTheme(bool isDark) {
     setState(() {
@@ -261,6 +278,11 @@ class _ReaderScreenState extends State<ReaderScreen>
               },
             ),
             actions: <Widget>[
+              _document != null
+                  ? TextToSpeechButton(_extractTextFromEpubSync()
+                      .replaceAll(RegExp(r'\s+'), ' ')
+                      .trim())
+                  : Container(),
               IconButton(
                 icon: const Icon(Icons.bookmark),
                 color: Theme.of(context).colorScheme.onBackground,
@@ -355,7 +377,6 @@ class _ReaderScreenState extends State<ReaderScreen>
                   }
                 },
               ),
-              TextToSpeechButton(_epubReaderController),
               AnimSearchBar(
                 width: 300,
                 textController: textController,
@@ -424,6 +445,19 @@ class _ReaderScreenState extends State<ReaderScreen>
                         _showQuiz = true;
                       });
                     }
+                    if (_pagAtual == null ||
+                        _pagAtual != _epubReaderController.currentPage.value) {
+                      if (_horaAtual == null) {
+                        _horaAtual = DateTime.now();
+                      } else {
+                        int tempoGasto =
+                            DateTime.now().difference(_horaAtual!).inSeconds;
+                        readingTime(tempoGasto);
+
+                        _horaAtual = null;
+                      }
+                      _pagAtual = _epubReaderController.currentPage.value;
+                    }
                   },
                 ),
           bottomSheet:
@@ -480,6 +514,32 @@ class _ReaderScreenState extends State<ReaderScreen>
   Future<void> _clearAnsweredQuestions() async {
     _prefs = await SharedPreferences.getInstance();
     await _prefs.clear();
+  }
+
+  String _extractTextFromEpubSync() {
+    if (_document == null) return '';
+
+    return _document!.Chapters!.fold(StringBuffer(),
+        (StringBuffer buffer, EpubChapter chapter) {
+      _extractChapterText(chapter, buffer);
+      return buffer;
+    }).toString();
+  }
+
+  void _extractChapterText(EpubChapter chapter, StringBuffer buffer) {
+    if (chapter.HtmlContent != null) {
+      final textContent = _removeHtmlTags(chapter.HtmlContent!);
+      buffer.writeln(textContent);
+    }
+
+    for (var subChapter in chapter.SubChapters!) {
+      _extractChapterText(subChapter, buffer);
+    }
+  }
+
+  String _removeHtmlTags(String html) {
+    final document = parse(html);
+    return document.body?.text ?? '';
   }
 
   Future<void> _saveAnswer(int attemptId) async {
@@ -551,6 +611,20 @@ class _ReaderScreenState extends State<ReaderScreen>
           fontFamily: newFontFamily,
           package: "epub_view");
     });
+  }
+
+  void readingTime(int tempoGasto) async {
+    try {
+      GenericPostResponse response = await postReadingTime(
+        _epubReaderController.userId,
+        _epubReaderController.bookId,
+        _epubReaderController.currentPage.value,
+        tempoGasto,
+      );
+      print('Success: ${response.success}, Message: ${response.message}');
+    } catch (e) {
+      print('Erro ao enviar o tempo de leitura: $e');
+    }
   }
 
   Future<int?> getLocationData() async {

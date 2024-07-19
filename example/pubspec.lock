@@ -166,7 +166,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "4515d1402ce2605bbd552f18da8d1ce9a40c8f0c"
+      resolved-ref: "8dd2214f844aac7bfd674a86e47867b2f94645fe"
       url: "https://github.com/Cafe-EAD/databiblio-reader.git"
     source: git
     version: "3.2.0"
@@ -621,10 +621,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_windows
-      sha256: "8bc9f22eee8690981c22aa7fc602f5c85b497a6fb2ceb35ee5a5e5ed85ad8170"
+      sha256: bd6f00dbd873bfb70d0761682da2b3a2c2fccc2b9e84c495821639601d81afe7
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.1"
+    version: "2.3.0"
   petitparser:
     dependency: transitive
     description:
@@ -637,10 +637,10 @@ packages:
     dependency: transitive
     description:
       name: platform
-      sha256: "12220bb4b65720483f8fa9450b4332347737cf8213dd2840d8b2c823e47243ec"
+      sha256: "9b71283fc13df574056616011fb138fd3b793ea47cc509c189a6c3fa5f8a1a65"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.4"
+    version: "3.1.5"
   plugin_platform_interface:
     dependency: transitive
     description:
@@ -717,10 +717,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_platform_interface
-      sha256: "22e2ecac9419b4246d7c22bfbbda589e3acf5c0351137d87dd2939d984d37c3b"
+      sha256: "034650b71e73629ca08a0bd789fd1d83cc63c2d1e405946f7cef7bc37432f93a"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.2"
+    version: "2.4.0"
   shared_preferences_web:
     dependency: transitive
     description:
@@ -990,14 +990,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "13.0.0"
-  vocsy_epub_viewer:
-    dependency: "direct main"
-    description:
-      name: vocsy_epub_viewer
-      sha256: "30aab4a5be22e8c98f22fed3345f6989caaca861178c38cab2a8b8cd66ad53de"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.0"
   wakelock_plus:
     dependency: transitive
     description:

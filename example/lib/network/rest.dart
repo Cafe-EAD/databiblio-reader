@@ -149,6 +149,12 @@ Future<Map<String, dynamic>> processAttempt(String attemptId) async {
       '$baseUrl?wsfunction=mod_quiz_process_attempt&attemptid=$attemptId&finishattempt=1',
       method: HttpMethod.GET,
       wsTokenBoll: true)));
-
       return response;
+}
+
+Future<GenericPostResponse> postReadingTime(
+    int userId, int bookId, int page, int timeSpent) async {
+  return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=local_wsgetbooks_post_readingtime&userid=$userId&bookid=$bookId&page=$page&timespent=$timeSpent',
+      method: HttpMethod.POST))));
 }
