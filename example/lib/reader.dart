@@ -7,8 +7,9 @@ import 'package:collection/collection.dart';
 import 'package:epub_view/epub_view.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
 import 'package:epub_view_example/model/bookmark.dart';
+import 'package:epub_view_example/model/quiz_attempt_data.dart';
+import 'package:epub_view_example/model/quiz_data.dart';
 import 'package:epub_view_example/model/common.dart';
-import 'package:epub_view_example/model/question.dart';
 import 'package:epub_view_example/utils/model_keys.dart';
 import 'package:epub_view_example/widget/bookmark_bottom_sheet.dart';
 import 'package:epub_view_example/widget/quiz_modal.dart';
@@ -58,52 +59,16 @@ class _ReaderScreenState extends State<ReaderScreen>
   List<BookmarkModel> bookmarks = [];
   List<BookmarkModel> bookmarksinfo = [];
   List<HighlightModel> highlightsinfo = [];
-  final TextEditingController _searchController = TextEditingController();
   int _bottomSheetState = 0; // 0: nenhum, 1: bookmarks/highlights
   bool _isBookmarkMarked = false;
   bool _showSearchField = false;
-
+  QuizAttemptData? quizAttemptData;
+  List<QuizData>? quizData;
+  final Set<int> _paginasComQuizzes = {};
+  int? idAttemptId;
   EpubChapterViewValue? _currentChapterValue;
 
-  // Mocado question
-  final Map<int, List<Question>> _questionsByChapter = {
-    2: [
-      Question(
-        id: 1,
-        chapterNumber: 2,
-        text: 'Pergunta número 01?',
-        options: [
-          'Resposta letra A',
-          'Resposta letra B',
-          'Resposta letra C',
-          'Resposta letra D'
-        ],
-        correctAnswerIndex: 2,
-        questionType: 'Múltipla Escolha',
-      ),
-      Question(
-        id: 2,
-        chapterNumber: 2,
-        text: 'Pergunta número 02?',
-        options: ['Verdadeiro', 'Falso'],
-        correctAnswerIndex: 0,
-        questionType: 'Verdadeiro ou Falso',
-      ),
-    ],
-    3: [
-      Question(
-        id: 3,
-        chapterNumber: 3,
-        text: 'Pergunta número 03?',
-        options: [],
-        correctAnswerIndex: null,
-        questionType: 'Resposta Aberta',
-      ),
-    ],
-  };
-
   late SharedPreferences _prefs;
-  int _currentQuestionIndex = 0;
   int _currentChapter = 0;
   bool _showQuiz = false;
   EpubBook? _document;
@@ -164,12 +129,85 @@ class _ReaderScreenState extends State<ReaderScreen>
     getBookmarks(_epubReaderController.userId, _epubReaderController.bookId)
         .then((value) => bookmarks = value);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // 1. Carregar bookmarks
       bookmarks = await getBookmarks(
           _epubReaderController.userId, _epubReaderController.bookId);
+
+      // 2. Obter dados dos quizzes e iniciar attempts
+      final resultQuizData =
+          await getAllDesafio(_epubReaderController.bookId == 0
+                            ? '224'
+                            : _epubReaderController.bookId.toString() );
+      if (resultQuizData != null) {
+        for (var quiz in resultQuizData) {
+          await _iniciarOuRecuperarAttempt(quiz.quizId.toString());
+        }
+
+        // 3. Popular _paginasComQuizzes
+        setState(() {
+          quizData = resultQuizData;
+          for (var quiz in quizData!) {
+            final pagina = int.tryParse(quiz.pagina);
+            if (pagina != null) {
+              _paginasComQuizzes.add(pagina);
+            }
+          }
+        });
+      }
+
+      // 4. Carregar dados do quiz attempt (se necessário)
+      final prefs = await SharedPreferences.getInstance();
+      final attemptId = prefs.getInt('attemptId');
+      if (attemptId != null) {
+        final resultAttemptData = await getDesafio(attemptId.toString());
+        setState(() {
+          quizAttemptData = resultAttemptData;
+          idAttemptId = attemptId;
+        });
+      } else {
+        await prefs.setInt('attemptId', 9);
+        final attemptId = prefs.getInt('attemptId');
+        final resultAttemptData = await getDesafio(attemptId.toString());
+        setState(() {
+          quizAttemptData = resultAttemptData;
+          idAttemptId = attemptId;
+        });
+      }
+
       debugPrint('>>> bookmarks $bookmarks');
+      debugPrint('>>> _paginasComQuizzes: $_paginasComQuizzes');
     });
 
     super.initState();
+  }
+
+  Future<void> _iniciarOuRecuperarAttempt(String quizId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final attemptIdSalvo = prefs.getInt('attemptId_$quizId');
+
+    if (attemptIdSalvo != null) {
+      print('ID do attempt recuperado: $attemptIdSalvo');
+      return;
+    }
+
+    try {
+      final attemptResponse = await getAttempt(quizId);
+      if (attemptResponse != null && attemptResponse.attempt.id != null) {
+        final attemptId = attemptResponse.attempt.id;
+        print('Novo ID do attempt: $attemptId');
+
+        await prefs.setInt('attemptId_$quizId', attemptId);
+        await prefs.setInt('attemptId', attemptId);
+      } else {
+        _mostrarErro('Erro: Resposta da API inválida.');
+      }
+    } catch (e) {
+      _mostrarErro('Erro ao iniciar attempt: $e');
+    }
+  }
+
+  void _mostrarErro(String mensagem) {
+    print(mensagem);
   }
 
   @override
@@ -307,33 +345,31 @@ class _ReaderScreenState extends State<ReaderScreen>
           ),
           body: _showQuiz
               ? QuizModal(
-                  question: _questionsByChapter[_currentChapter]![
-                      _currentQuestionIndex],
-                  onCorrectAnswer: () {
-                    _onCorrectAnswer(_questionsByChapter[_currentChapter]![
-                        _currentQuestionIndex]);
-                  },
-                )
+                  onQuizFinished: _finishQuiz,
+                  questions: quizAttemptData,
+                 )
               : EpubView(
                   builders: EpubViewBuilders(
                     options: _builderOptions,
                     chapterDividerBuilder: (_) => const Divider(),
                   ),
                   controller: _epubReaderController,
-                  onChapterChanged: (value) {
+                  onChapterChanged: (value) async {
                     postLocationData(value?.position.index);
                     _currentChapter = value?.chapterNumber ?? 0;
                     _epubReaderController.updateCurrentPage();
                     // if (!kIsWeb) _showPageNumber();
 
-                    if (_epubReaderController.bookId == 4 &&
+                    if (
+                        // _epubReaderController.bookId == 4 &&
                         _currentChapter != 0 &&
-                        !_hasAnsweredQuestion(
-                            _questionsByChapter[_currentChapter]!.first.id)) {
+                            _paginasComQuizzes
+                                .contains(value!.paragraphNumber.toInt()) &&
+                            !_hasAnsweredQuestion(
+                                quizAttemptData!.attempt.id)) {
                       setState(() {
                         _currentChapterValue = value;
                         _showQuiz = true;
-                        _currentQuestionIndex = 0;
                       });
                     }
                     if (_pagAtual == null ||
@@ -390,22 +426,21 @@ class _ReaderScreenState extends State<ReaderScreen>
     }
   }
 
-  void _onCorrectAnswer(Question question) {
-    _saveAnswer(question.id);
+  void _finishQuiz(int attemptId) {
     setState(() {
-      if (_currentQuestionIndex <
-          _questionsByChapter[_currentChapter]!.length - 1) {
-        _currentQuestionIndex++;
-      } else {
-        _showQuiz = false;
-        _currentQuestionIndex = 0;
-        final startIndex = _epubReaderController
-            .chapterStartIndices[_currentChapterValue?.chapter?.Title];
-        if (startIndex != null) {
-          _epubReaderController.jumpTo(index: startIndex, alignment: 0);
-        }
+      _showQuiz = false;
+      final startIndex = _epubReaderController
+          .chapterStartIndices[_currentChapterValue?.chapter?.Title];
+      if (startIndex != null) {
+        _epubReaderController.jumpTo(index: startIndex, alignment: 0);
       }
     });
+    _saveAnswer(attemptId);
+  }
+
+  Future<void> _clearAnsweredQuestions() async {
+    _prefs = await SharedPreferences.getInstance();
+    await _prefs.clear();
   }
 
   String _extractTextFromEpubSync() {
@@ -434,20 +469,15 @@ class _ReaderScreenState extends State<ReaderScreen>
     return document.body?.text ?? '';
   }
 
-  // Future<void> _clearAnsweredQuestions() async {
-  //   _prefs = await SharedPreferences.getInstance();
-  //   await _prefs.clear();
-  // }
-
-  Future<void> _saveAnswer(int questionId) async {
+  Future<void> _saveAnswer(int attemptId) async {
     final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
-    answeredQuestions.add(questionId.toString());
+    answeredQuestions.add(attemptId.toString());
     await _prefs.setStringList('answeredQuestions', answeredQuestions);
   }
 
-  bool _hasAnsweredQuestion(int questionId) {
+  bool _hasAnsweredQuestion(int attemptId) {
     final answeredQuestions = _prefs.getStringList('answeredQuestions') ?? [];
-    return answeredQuestions.contains(questionId.toString());
+    return answeredQuestions.contains(attemptId.toString());
   }
 
   _getInfoPopular() async {

@@ -3,8 +3,12 @@ import 'dart:convert';
 import 'package:epub_view_example/model/bookmark.dart';
 import 'package:epub_view_example/model/common.dart';
 import 'package:epub_view_example/model/highlight_model.dart';
+import 'package:epub_view_example/model/quiz_attempt_data.dart';
+import 'package:epub_view_example/model/quiz_attempt_response.dart';
+import 'package:epub_view_example/model/quiz_data.dart';
 import '../model/locator.dart';
 import 'network_utils.dart';
+import 'package:http/http.dart' as http;
 
 const baseUrl =
     'https://databiblion.cafeeadhost.com.br/webservice/rest/server.php';
@@ -90,10 +94,67 @@ Future<GenericPostResponse> deleteBookmarkNote(int id) async {
           method: HttpMethod.DELETE))));
 }
 
+Future<List<QuizData>?> getAllDesafio(String bookid) async {
+  final response = await (handleResponse(await buildHttpResponse(
+    '$baseUrl?wsfunction=local_wsgetbooks_get_bookquiz&bookid=$bookid',
+    method: HttpMethod.GET,
+  )));
+  List<QuizData> result =
+      List<QuizData>.from(response.map((model) => QuizData.fromJson(model)));
+  return result;
+}
+
+Future<QuizAttemptData?> getDesafio(String attemptid) async {
+  Map<String, dynamic> response = await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=mod_quiz_get_attempt_data&attemptid=$attemptid&page=0',
+      method: HttpMethod.GET,
+      wsTokenBoll: true)));
+  return QuizAttemptData.fromJson(response);
+}
+
+Future<QuizAttemptResponse?> getAttempt(String quizid) async {
+  Map<String, dynamic> response = await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=mod_quiz_start_attempt&quizid=$quizid',
+      method: HttpMethod.GET,
+      wsTokenBoll: true)));
+  return QuizAttemptResponse.fromJson(response);
+}
+
+Future<Map<String, dynamic>> saveAttempt(
+  String attemptid,
+  Map<String, String> data,
+) async {
+    final url =
+        '$baseUrl?wsfunction=mod_quiz_save_attempt&attemptid=$attemptid&moodlewsrestformat=json';
+
+    final queryString = data.entries.map((entry) {
+      final encodedName = Uri.encodeQueryComponent(entry.key);
+      final encodedValue = Uri.encodeQueryComponent(entry.value);
+      return '$encodedName=$encodedValue';
+    }).join('&');
+
+    final fullUrl = '$url&$queryString';
+    // print('URL da requisição: $fullUrl');
+    final response = await (handleResponse(await buildHttpResponse(
+      fullUrl,
+      method: HttpMethod.GET,
+      wsTokenBoll: true,
+    )));
+
+    return response;
+}
+
+Future<Map<String, dynamic>> processAttempt(String attemptId) async {
+  Map<String, dynamic> response = await (handleResponse(await buildHttpResponse(
+      '$baseUrl?wsfunction=mod_quiz_process_attempt&attemptid=$attemptId&finishattempt=1',
+      method: HttpMethod.GET,
+      wsTokenBoll: true)));
+      return response;
+}
+
 Future<GenericPostResponse> postReadingTime(
     int userId, int bookId, int page, int timeSpent) async {
   return GenericPostResponse.fromJson(await (handleResponse(await buildHttpResponse(
       '$baseUrl?wsfunction=local_wsgetbooks_post_readingtime&userid=$userId&bookid=$bookId&page=$page&timespent=$timeSpent',
       method: HttpMethod.POST))));
-      
 }
