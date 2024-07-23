@@ -15,8 +15,11 @@ class LocatorModelKeys {
 }
 
 class BookmarkKeys {
-  static String index = "index";
+  static String id = "id";
+  static String bookmarkedindex = "bookmarkedindex";
+  static String title = "title";
   static String note = "note";
+  static String notetext = "notetext";
 }
 
 class HighlightKeys {

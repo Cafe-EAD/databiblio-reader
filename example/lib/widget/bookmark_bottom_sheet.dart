@@ -6,6 +6,7 @@ import 'package:epub_view_example/model/highlight_model.dart';
 import 'package:epub_view_example/network/rest.dart';
 import 'package:flutter/material.dart';
 import 'package:epub_view/src/data/models/chapter_view_value.dart';
+import 'package:html/parser.dart';
 
 class BookmarkBottomSheet extends StatefulWidget {
   final bool isBookmarkMarked;
@@ -45,6 +46,13 @@ class BookmarkBottomSheet extends StatefulWidget {
 
 class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
   bool _isClickInProgress = false;
+  List<int> chapterQtd = [];
+  @override
+  void initState() {
+    super.initState();
+    loadChapter(widget.epubReaderController);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -178,34 +186,10 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    FutureBuilder<String>(
-                                      future: _getChapterTitleByIndex(
-                                          widget.epubReaderController,
-                                          widget
-                                              .bookmarksinfo[
-                                                  widget.bookmarksinfo.length -
-                                                      index -
-                                                      1]
-                                              .bookmarkedindex!
-                                              .toInt()),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasData) {
-                                          return Text(
-                                            snapshot.data ??
-                                                'Título não disponível',
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey,
-                                            ),
-                                          );
-                                        } else if (snapshot.hasError) {
-                                          return const Text(
-                                              'Erro ao carregar o título do capítulo');
-                                        } else {
-                                          return const CircularProgressIndicator();
-                                        }
-                                      },
-                                    ),
+                                    Text(widget.bookmarksinfo[widget
+                                                        .bookmarksinfo.length -
+                                                    index -
+                                                    1].title??'Erro ao carregar o título do capítulo'),
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
@@ -572,10 +556,12 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
     } else {
       // print("Marcar");
       try {
+        var title ='${widget.epubReaderController.currentValue!.chapter!.Title??''} - Página ${widget.epubReaderController.currentPage.value}';
         await postBookmark(
           widget.bookId == 0 ? 1 : widget.bookId,
           widget.userId == 0 ? 1 : widget.userId,
           widget.epubReaderController.currentValue!.chapterNumber,
+          title
         );
         widget.onBookmarkAdded();
         setState(() {
@@ -590,13 +576,34 @@ class _BookmarkBottomSheetState extends State<BookmarkBottomSheet> {
       }
     }
   }
-}
 
-Future<String> _getChapterTitleByIndex(
-    EpubController controller, int index) async {
-  final epubBook = await controller.document;
-  final chapter = epubBook.Chapters![index - 1];
-  return chapter.Title ?? 'Título não disponível';
+  Future<void> loadChapter(EpubController controller) async {
+    final epubBook = await controller.document;
+
+    for (int i = 0; i < epubBook.Chapters!.length; i++) {
+      chapterQtd
+          .add(parse(epubBook.Chapters![i].HtmlContent).body!.text.length);
+    }
+  }
+
+  Future<String> _getChapterTitleByIndex(
+      EpubController controller, int index) async {
+    final epubBook = await controller.document;
+    final chapter = epubBook.Chapters![index - 1];
+    int total = chapterQtd.reduce((a, b) => a + b);
+    double pagTam = total / charactersPerPage;
+    int totalCap = 0;
+    int pag = 0;
+
+    for (int i = 0; i < index; i++) {
+      totalCap += chapterQtd[i];
+    }
+
+    pag = (totalCap / pagTam).floor();
+    return chapter.Title == null
+        ? 'Título não disponível'
+        : '${chapter.Title}-$pag';
+  }
 }
 
 _getStartIndexByIndex(EpubController controller, int index) async {
